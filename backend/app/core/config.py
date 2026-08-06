@@ -8,7 +8,7 @@ class Settings(BaseSettings):
 
     app_env: str = "development"
     mock_ai: bool = True
-    cors_origins: str = "http://localhost:3000"
+    cors_origins: str = "http://localhost:8000"
 
     model_config = SettingsConfigDict(env_file="../.env", extra="ignore")
 

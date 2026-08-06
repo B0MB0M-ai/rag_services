@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}AI Service & Repair Assistant{% endblock %}
+{% block content %}
+<main class="app-shell" x-data="{ navigationOpen: false }">
+  <aside class="sidebar" :class="navigationOpen && 'sidebar--open'">
+    <div class="brand">
+      <span class="brand__mark" aria-hidden="true">⚙</span>
+      <div><strong>Service Intelligence</strong><small>Industrial maintenance demo</small></div>
+    </div>
+    <button class="sidebar__close" type="button" @click="navigationOpen = false" aria-label="ปิดเมนู">×</button>
+    <nav aria-label="Project navigation">
+      <a class="nav-item nav-item--active" href="/">Project overview</a>
+      <span class="nav-item">Service Assistant <small>Phase 5</small></span>
+      <span class="nav-item">Knowledge Base <small>Phase 3</small></span>
+      <span class="nav-item">Repair Estimates <small>Phase 4</small></span>
+    </nav>
+    <div class="sidebar__footer"><span class="status-dot"></span> Backend-served interface</div>
+  </aside>
+
+  <section class="content">
+    <button class="menu-button" type="button" @click="navigationOpen = true" aria-label="เปิดเมนู">☰</button>
+    <div class="eyebrow">Phase 1 foundation ready</div>
+    <h1>AI Service &amp;<br><span>Repair Assistant</span></h1>
+    <p class="lead">ระบบผู้ช่วยฝ่ายบริการและประเมินค่าซ่อมเครื่องจักรด้วย RAG</p>
+    <p class="intro">A traceable, bilingual assistant for preliminary machinery diagnosis and repair estimation—now delivered directly by FastAPI.</p>
+
+    <div class="cards">
+      <article><span class="card-icon" aria-hidden="true">✦</span><h2>Mock-first AI boundary</h2><p>Deterministic development without external AI cost.</p></article>
+      <article><span class="card-icon" aria-hidden="true">▰</span><h2>PostgreSQL + pgvector</h2><p>Structured business facts and transparent retrieval.</p></article>
+      <article><span class="card-icon" aria-hidden="true">✓</span><h2>SQL-authoritative pricing</h2><p>Commercial values never come from model prompts.</p></article>
+    </div>
+
+    <section class="runtime" aria-labelledby="runtime-title">
+      <div><p class="runtime__label">Single-process runtime</p><h2 id="runtime-title">FastAPI + Jinja2 + HTMX + Alpine.js</h2></div>
+      <button class="check-button" hx-get="/partials/health-status" hx-target="#health-result" hx-swap="innerHTML" hx-indicator="#health-loading">Check backend</button>
+      <div id="health-loading" class="htmx-indicator" role="status">Checking…</div>
+      <div id="health-result" aria-live="polite"></div>
+    </section>
+
+    <div class="safety"><strong>Safety boundary</strong><p>Every future diagnosis is a preliminary assessment and must be confirmed by a qualified technician.</p></div>
+  </section>
+  <button class="scrim" x-show="navigationOpen" x-cloak @click="navigationOpen = false" aria-label="ปิดเมนู"></button>
+</main>
+{% endblock %}
