@@ -4,8 +4,9 @@ Phase 1 establishes the process boundaries; this document will be expanded as co
 
 ```mermaid
 flowchart LR
-  U[Service officer] --> W[Next.js web app]
-  W -->|REST /api/v1| A[FastAPI]
+  U[Service officer] --> A[FastAPI web application]
+  A -->|renders| W[Jinja2 + HTMX + Alpine.js]
+  W -->|HTML requests| A
   A --> S[Services and repositories]
   S --> P[(PostgreSQL)]
   S --> V[(pgvector chunks)]

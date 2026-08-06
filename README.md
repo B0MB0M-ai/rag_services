@@ -23,20 +23,21 @@ See the phased scope and acceptance checks in [the implementation plan](docs/imp
 ## Architecture
 
 ```text
-Browser / Next.js :3000 -> FastAPI /api/v1 :8000 -> PostgreSQL 16 + pgvector
-                                      |            (business data + chunks)
-                                      `-> OpenAI Responses/Embeddings (optional)
+Browser -> FastAPI :8000 -> PostgreSQL 16 + pgvector
+           |    |              (business data + chunks)
+           |    `-> OpenAI Responses/Embeddings (optional)
+           `-> Jinja2 templates + HTMX/Alpine.js
 ```
 
-The Phase 1 backend exposes `GET /api/v1/health`; the frontend provides a responsive project-status landing page. Detailed component and data-flow diagrams will be completed in Phase 2.
+FastAPI serves both `GET /api/v1/health` and the responsive web interface. Jinja2 renders full pages and HTML fragments, HTMX handles server interactions, and Alpine.js provides small client-side behaviors.
 
 ## Technology stack
 
-- **Frontend:** Next.js App Router, strict TypeScript, Tailwind CSS; shadcn/ui, Lucide, Recharts, React Hook Form, Zod planned
+- **Web UI:** Server-rendered Jinja2 templates, HTMX, Alpine.js, and repository-owned CSS
 - **Backend:** Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2, Alembic, Uvicorn
 - **Data/RAG:** PostgreSQL, pgvector, custom hybrid retrieval, official OpenAI Python SDK
 - **Documents/PDF:** PyMuPDF, python-docx, pandas/openpyxl, WeasyPrint (added with their feature phases)
-- **Quality:** Ruff, Pytest, ESLint, Vitest, Playwright, GitHub Actions (expanded by phase)
+- **Quality:** Ruff, Pytest, Playwright, GitHub Actions (expanded by phase)
 
 ## Quick start with Docker
 
@@ -45,11 +46,11 @@ cp .env.example .env
 docker compose up --build
 ```
 
-Open <http://localhost:3000>. API documentation is at <http://localhost:8000/docs>, and health is at <http://localhost:8000/api/v1/health>.
+Open <http://localhost:8000>. API documentation is at <http://localhost:8000/docs>, and health is at <http://localhost:8000/api/v1/health>.
 
 ## Run without Docker
 
-Prerequisites: Node.js 20+, npm, and Python 3.12.
+Prerequisite: Python 3.12.
 
 ```bash
 cp .env.example .env
@@ -59,19 +60,13 @@ pip install -e '.[dev]'
 uvicorn app.main:app --reload
 ```
 
-In another terminal:
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
+The same Uvicorn process serves the web interface and versioned API; no frontend development server is required.
 
 PostgreSQL is not used by the Phase 1 health skeleton. From Phase 2 onward, run the Compose database or provide a compatible `DATABASE_URL`.
 
 ## Environment variables
 
-Copy `.env.example` rather than committing `.env`. Important values are `DATABASE_URL`, `MOCK_AI`, server-only `OPENAI_API_KEY`, model names, CORS origins, upload limits, and retrieval tuning values. No secret may use a `NEXT_PUBLIC_` prefix.
+Copy `.env.example` rather than committing `.env`. Important values are `DATABASE_URL`, `MOCK_AI`, server-only `OPENAI_API_KEY`, model names, CORS origins, upload limits, and retrieval tuning values.
 
 ## Demo data, seeding, and indexing
 
@@ -81,10 +76,9 @@ Synthetic documents will live in `backend/sample_data/documents/`. Phase 2 will 
 
 ```bash
 cd backend && ruff check . && pytest
-cd frontend && npm run lint && npm run typecheck && npm test
 ```
 
-Phase 1 contains backend health tests and a frontend landing-page unit test. Playwright coverage arrives during integration.
+Phase 1 contains API, server-rendered page, and HTMX fragment tests. Playwright coverage arrives during integration.
 
 ## Demo accounts
 

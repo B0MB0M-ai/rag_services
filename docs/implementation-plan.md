@@ -6,7 +6,7 @@ This portfolio demo favors transparent, testable components. RAG supplies eviden
 
 ## Target architecture
 
-1. **Next.js web client** — App Router layouts, role-aware navigation, typed API client, forms validated with Zod/React Hook Form, reusable shadcn/ui components, charts, and PDF download.
+1. **Server-rendered web interface** — FastAPI renders Jinja2 pages and fragments; HTMX handles HTML-over-the-wire interactions and Alpine.js provides focused client-side behavior without a separate frontend runtime.
 2. **FastAPI application** — versioned routers and dependencies delegate to services and repositories; centralized errors produce consistent envelopes; structured logs capture correlation IDs without secrets.
 3. **PostgreSQL + pgvector** — normalized operational data and immutable/revisioned pricing in relational tables; embeddings only on document chunks, with full-text indexes alongside vector indexes.
 4. **Document pipeline** — validated uploads, format-specific extraction, preview, semantic chunking, metadata enrichment, embedding, and observable indexing states.
@@ -17,9 +17,9 @@ This portfolio demo favors transparent, testable components. RAG supplies eviden
 
 - Establish repository guidance, configuration examples, Docker Compose, ignore rules, and monorepo directories.
 - Scaffold a typed FastAPI application with versioned health routing and a test.
-- Scaffold a strict Next.js App Router application with Tailwind, accessible status page, lint/type/test configuration, and a test.
+- Scaffold an accessible Jinja2 status page served by FastAPI, with HTMX and Alpine.js integration and regression tests.
 - Document local and container startup plus explicit phase limitations.
-- Acceptance: backend unit test and lint pass; frontend unit test, lint, typecheck, and production build pass; Compose config validates.
+- Acceptance: backend unit tests and lint pass; server-rendered page and fragment tests pass; Compose config validates.
 
 ## Phase 2 — database, migrations, and machine API
 
@@ -51,18 +51,18 @@ This portfolio demo favors transparent, testable components. RAG supplies eviden
 - Build the navy/cyan responsive shell and all specified navigation destinations with loading, empty, validation, and friendly error states.
 - Build the three-column assistant (case context, chat, diagnosis/cost), follow-ups, evidence badges, checklists, safety callouts, parts editor, and technician warning.
 - Build estimate editor/PDF workflow, machine/fault/manual views, knowledge upload/preview/indexing, parts/pricing configuration, dashboard charts, history, feedback, and settings.
-- Add typed API/domain layers and accessible components. Unit test the repair calculator presentation.
+- Add typed view models, accessible template components, and progressive enhancement. Test the repair calculator presentation.
 
 ## Phase 6 — integration, automation, and documentation
 
 - Add login-to-estimate Playwright flow for HP-500 oil leakage in mock mode.
-- Add GitHub Actions jobs for backend and frontend lint, tests, type checks, build, and E2E with service containers.
+- Add GitHub Actions jobs for backend lint, tests, template checks, and E2E with service containers.
 - Exercise startup, migrations, seed/index scripts, CORS, upload errors, provider outage paths, responsive layouts, and quotation download.
 - Complete architecture, schema/ER, RAG/scoring, API, demo script, screenshots, operational notes, limitations, and future roadmap.
 
 ## Planned package boundaries
 
-Backend code is separated into `api`, `core`, `db`, `models`, `schemas`, `repositories`, `services`, `rag`, `document_processing`, `prompts`, and `utils`. Frontend code is separated into App Router routes, shared `components`, domain `features`, `hooks`, API/utilities in `lib`, shared `types`, and tests.
+Backend code is separated into `api`, `core`, `db`, `models`, `schemas`, `repositories`, `services`, `rag`, `document_processing`, `prompts`, and `utils`. The web interface is separated into web routers, page and partial templates, static assets, and tests.
 
 ## Phase gates
 
