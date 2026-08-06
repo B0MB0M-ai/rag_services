@@ -52,6 +52,18 @@ Open <http://localhost:8000>. API documentation is at <http://localhost:8000/doc
 
 Prerequisite: Python 3.12.
 
+For a one-command setup and start, run this from the repository root:
+
+```bash
+./run.sh
+```
+
+The script creates `.env` and `.venv` when needed, installs the backend development
+dependencies, and starts Uvicorn with auto-reload. Any additional arguments are passed to
+Uvicorn, for example `./run.sh --port 8080`.
+
+To perform the same setup manually:
+
 ```bash
 cp .env.example .env
 cd backend
