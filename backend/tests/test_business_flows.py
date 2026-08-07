@@ -4,13 +4,31 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.schemas.domain import EstimateItem, EstimateRequest
+from app.repositories.catalog import PARTS
+from app.schemas.domain import EstimateItem, EstimateRequest, Part
 from app.services.pricing import calculate_estimate
 
 client = TestClient(app)
 
 
-def test_pricing_covers_quantities_decimal_hours_discount_vat_and_rounding() -> None:
+@pytest.fixture
+def priced_filter() -> None:
+    PARTS.append(
+        Part(
+            id="p-filter-h46",
+            sku="FILTER-H46",
+            name_th="ไส้กรองทดสอบ",
+            name_en="Test filter",
+            unit_price_satang=125000,
+        )
+    )
+    yield
+    PARTS.clear()
+
+
+def test_pricing_covers_quantities_decimal_hours_discount_vat_and_rounding(
+    priced_filter: None,
+) -> None:
     result = calculate_estimate(
         EstimateRequest(
             items=[EstimateItem(part_id="p-filter-h46", quantity=2)],
@@ -62,8 +80,9 @@ def test_chat_escalates_when_evidence_is_insufficient() -> None:
 
 
 def test_catalog_and_assistant_page_are_available() -> None:
-    assert client.get("/api/v1/machines").json()["meta"]["total"] == 3
-    assert client.get("/api/v1/parts").json()["meta"]["total"] == 4
+    assert client.get("/api/v1/machines").json()["meta"]["total"] == 0
+    assert client.get("/api/v1/parts").json()["meta"]["total"] == 0
     page = client.get("/assistant")
     assert page.status_code == 200
-    assert "ServiceIQ Assistant" in page.text
+    assert "ยังไม่สามารถเริ่มวิเคราะห์ได้" in page.text
+    assert "HP-500" not in page.text
