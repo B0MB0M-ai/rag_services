@@ -13,7 +13,16 @@ templates = Jinja2Templates(directory=Path(__file__).parent.parent / "templates"
 @web_router.get("/", response_class=HTMLResponse)
 async def home(request: Request) -> HTMLResponse:
     """Render the application landing page."""
-    return templates.TemplateResponse(request=request, name="pages/home.html")
+    return templates.TemplateResponse(
+        request=request, name="pages/home.html", context={"active": "dashboard"}
+    )
+
+
+@web_router.get("/assistant", response_class=HTMLResponse)
+async def assistant(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse(
+        request=request, name="pages/assistant.html", context={"active": "assistant"}
+    )
 
 
 @web_router.get("/partials/health-status", response_class=HTMLResponse)
