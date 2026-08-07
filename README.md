@@ -4,7 +4,10 @@
 
 An internal portfolio-demo application for industrial machinery service officers. The finished product will combine cited maintenance knowledge with authoritative SQL pricing to create preliminary diagnoses and repair estimates in Thai or English.
 
-> **Phase status:** Phase 1 foundation only. The current UI and API are intentionally minimal; RAG, authentication, business entities, quotations, and demo data are planned for later phases.
+> **Phase status:** Integrated portfolio demo. The application includes a polished dashboard,
+> service-assistant workflow, deterministic cited mock diagnosis, catalog APIs, and exact
+> server-side estimate calculation. PostgreSQL persistence, production authentication, document
+> extraction, and PDF rendering remain deployment extensions described below.
 
 ## Business problem and guardrails
 
@@ -111,8 +114,10 @@ _Placeholder: dashboard, three-column Service Assistant, and preliminary quotati
 
 ## Current limitations
 
-- No database models, migrations, seed records, authentication, RAG, estimates, PDF output, or feature UI yet.
-- The Phase 1 landing page is a scaffold rather than the final enterprise interface.
+- Demo records use a deterministic in-process repository so the complete walkthrough works without
+  external services; production deployments should replace it with the planned SQLAlchemy repository.
+- Authentication, live document ingestion, OpenAI mode, and downloadable PDF rendering are not
+  enabled in this portfolio build.
 - Docker images are development-oriented and are not hardened production artifacts.
 
 ## Future improvements
