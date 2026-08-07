@@ -60,7 +60,17 @@ For a one-command setup and start, run this from the repository root:
 
 The script creates `.env` and `.venv` when needed, installs the backend development
 dependencies, and starts Uvicorn with auto-reload. Any additional arguments are passed to
-Uvicorn, for example `./run.sh --port 8080`.
+Uvicorn, for example `./run.sh --port 8080`. You can also set `HOST` or `PORT`, such as
+`PORT=8080 ./run.sh`.
+
+If startup reports that port 8000 is already in use, another application (often an earlier
+Uvicorn process) is already listening there. On macOS, find it with `lsof -nP -iTCP:8000
+-sTCP:LISTEN`, then stop every PID shown, for example `kill 26961 52379`. Do not type angle
+brackets around the numbers: `<PID>` in documentation is a placeholder, and zsh interprets
+`<` and `>` as shell redirection operators. Run the `lsof` command again afterward; no output
+means the port is free. Alternatively, leave the existing processes running and start this
+application on a different port with `./run.sh --port 8080`. The script checks the selected
+address before starting and prints these alternatives when a conflict is detected.
 
 To perform the same setup manually:
 
