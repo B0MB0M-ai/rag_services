@@ -103,4 +103,14 @@ fi
 
 echo "Starting the application at http://${display_host}:${PORT}"
 cd "${BACKEND_DIR}"
-exec "${VENV_DIR}/bin/uvicorn" app.main:app --reload --host "${HOST}" --port "${PORT}" "${uvicorn_args[@]}"
+uvicorn_command=(
+  "${VENV_DIR}/bin/uvicorn"
+  app.main:app
+  --reload
+  --host "${HOST}"
+  --port "${PORT}"
+)
+if ((${#uvicorn_args[@]} > 0)); then
+  uvicorn_command+=("${uvicorn_args[@]}")
+fi
+exec "${uvicorn_command[@]}"
