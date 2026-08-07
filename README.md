@@ -90,9 +90,12 @@ PostgreSQL is not used by the Phase 1 health skeleton. From Phase 2 onward, run 
 
 Copy `.env.example` rather than committing `.env`. Important values are `DATABASE_URL`, `MOCK_AI`, server-only `OPENAI_API_KEY`, model names, CORS origins, upload limits, and retrieval tuning values.
 
-## Demo data, seeding, and indexing
+## Data, seeding, and indexing
 
-Synthetic documents will live in `backend/sample_data/documents/`. Phase 2 will add database seeding; Phase 3 will add document indexing. No proprietary manual will be included.
+A new workspace starts empty: it does not preload machines, parts, service cases, prices, or
+knowledge documents. Customer data must be explicitly imported after the corresponding persistence
+and ingestion workflows are configured. Automated tests create their own isolated fixtures; no
+proprietary manual is included.
 
 ## Testing and checks
 
@@ -114,8 +117,8 @@ _Placeholder: dashboard, three-column Service Assistant, and preliminary quotati
 
 ## Current limitations
 
-- Demo records use a deterministic in-process repository so the complete walkthrough works without
-  external services; production deployments should replace it with the planned SQLAlchemy repository.
+- Catalog endpoints currently use an empty in-process repository; production deployments should
+  replace it with the planned SQLAlchemy repository and explicit user-managed imports.
 - Authentication, live document ingestion, OpenAI mode, and downloadable PDF rendering are not
   enabled in this portfolio build.
 - Docker images are development-oriented and are not hardened production artifacts.
