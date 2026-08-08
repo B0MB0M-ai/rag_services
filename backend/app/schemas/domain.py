@@ -73,7 +73,8 @@ class Citation(BaseModel):
 class KnowledgeDocument(BaseModel):
     id: str
     filename: str
-    category: Literal["machine", "manual"]
+    category: Literal["machine", "product_image", "manual"]
+    product_name: str | None = None
     size_bytes: int = Field(ge=0)
     content_type: str
     status: Literal["waiting_for_index"] = "waiting_for_index"
