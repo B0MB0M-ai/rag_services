@@ -22,7 +22,7 @@ def test_home_page_is_served_by_fastapi() -> None:
     response = TestClient(app).get("/")
 
     assert response.status_code == 200
-    assert "จัดการงานซ่อมอย่างมั่นใจ" in response.text
+    assert "เริ่มต้นด้วยข้อมูล" in response.text
     assert "htmx.org" in response.text
     assert "alpinejs" in response.text
 

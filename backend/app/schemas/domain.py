@@ -1,3 +1,4 @@
+from datetime import datetime
 from decimal import Decimal
 from typing import Literal
 
@@ -67,6 +68,16 @@ class Citation(BaseModel):
     document: str
     section: str
     score: float
+
+
+class KnowledgeDocument(BaseModel):
+    id: str
+    filename: str
+    category: Literal["machine", "manual"]
+    size_bytes: int = Field(ge=0)
+    content_type: str
+    status: Literal["waiting_for_index"] = "waiting_for_index"
+    uploaded_at: datetime
 
 
 class ChatResult(BaseModel):

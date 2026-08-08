@@ -1,10 +1,13 @@
 from pathlib import Path
+from typing import Annotated
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, File, Form, Request, UploadFile
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from app.core.config import get_settings
+from app.repositories.catalog import KNOWLEDGE_DOCUMENTS
+from app.services.documents import DocumentCategory, DocumentUploadError, store_document
 
 web_router = APIRouter(include_in_schema=False)
 templates = Jinja2Templates(directory=Path(__file__).parent.parent / "templates")
@@ -14,7 +17,9 @@ templates = Jinja2Templates(directory=Path(__file__).parent.parent / "templates"
 async def home(request: Request) -> HTMLResponse:
     """Render the application landing page."""
     return templates.TemplateResponse(
-        request=request, name="pages/home.html", context={"active": "dashboard"}
+        request=request,
+        name="pages/home.html",
+        context={"active": "dashboard", "document_count": len(KNOWLEDGE_DOCUMENTS)},
     )
 
 
@@ -22,6 +27,39 @@ async def home(request: Request) -> HTMLResponse:
 async def assistant(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(
         request=request, name="pages/assistant.html", context={"active": "assistant"}
+    )
+
+
+@web_router.get("/data", response_class=HTMLResponse)
+async def data_upload(request: Request) -> HTMLResponse:
+    settings = get_settings()
+    return templates.TemplateResponse(
+        request=request,
+        name="pages/data_upload.html",
+        context={
+            "active": "data",
+            "documents": KNOWLEDGE_DOCUMENTS,
+            "max_upload_size_mb": settings.max_upload_size_mb,
+        },
+    )
+
+
+@web_router.post("/data/upload", response_class=HTMLResponse)
+async def data_upload_submit(
+    request: Request,
+    category: Annotated[DocumentCategory, Form()],
+    file: Annotated[UploadFile, File()],
+) -> HTMLResponse:
+    settings = get_settings()
+    try:
+        document = await store_document(
+            file, category, settings.max_upload_size_mb * 1024 * 1024
+        )
+        context = {"document": document, "error": None}
+    except DocumentUploadError as error:
+        context = {"document": None, "error": str(error)}
+    return templates.TemplateResponse(
+        request=request, name="partials/upload_result.html", context=context
     )
 
 

@@ -86,3 +86,45 @@ def test_catalog_and_assistant_page_are_available() -> None:
     assert page.status_code == 200
     assert "ยังไม่สามารถเริ่มวิเคราะห์ได้" in page.text
     assert "HP-500" not in page.text
+
+
+def test_data_upload_page_and_document_api() -> None:
+    from app.repositories.catalog import DOCUMENT_CONTENT, KNOWLEDGE_DOCUMENTS
+
+    KNOWLEDGE_DOCUMENTS.clear()
+    DOCUMENT_CONTENT.clear()
+    page = client.get("/data")
+    assert page.status_code == 200
+    assert "นำเข้าข้อมูลสำหรับ RAG" in page.text
+    assert "CSV หรือ XLSX" in page.text
+    assert "PDF, DOCX หรือ TXT" in page.text
+
+    response = client.post(
+        "/api/v1/documents",
+        data={"category": "manual"},
+        files={"file": ("safety.pdf", b"sample manual", "application/pdf")},
+    )
+    assert response.status_code == 201
+    document = response.json()["data"]
+    assert document["filename"] == "safety.pdf"
+    assert document["status"] == "waiting_for_index"
+    assert DOCUMENT_CONTENT[document["id"]] == b"sample manual"
+    assert client.get("/api/v1/documents").json()["meta"]["total"] == 1
+
+
+def test_document_upload_rejects_wrong_type_and_empty_files() -> None:
+    wrong_type = client.post(
+        "/api/v1/documents",
+        data={"category": "manual"},
+        files={"file": ("manual.exe", b"unsafe", "application/octet-stream")},
+    )
+    assert wrong_type.status_code == 422
+    assert "ไม่รองรับ" in wrong_type.json()["detail"]
+
+    empty = client.post(
+        "/api/v1/documents",
+        data={"category": "machine"},
+        files={"file": ("machines.csv", b"", "text/csv")},
+    )
+    assert empty.status_code == 422
+    assert "ว่างเปล่า" in empty.json()["detail"]
