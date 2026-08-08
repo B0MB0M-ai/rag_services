@@ -8,10 +8,11 @@ from fastapi import UploadFile
 from app.repositories.catalog import DOCUMENT_CONTENT, KNOWLEDGE_DOCUMENTS
 from app.schemas.domain import KnowledgeDocument
 
-DocumentCategory = Literal["machine", "manual"]
+DocumentCategory = Literal["machine", "product_image", "manual"]
 
 ALLOWED_EXTENSIONS: dict[DocumentCategory, set[str]] = {
     "machine": {".csv", ".xlsx"},
+    "product_image": {".jpg", ".jpeg", ".png", ".webp"},
     "manual": {".pdf", ".docx", ".txt"},
 }
 
@@ -21,7 +22,10 @@ class DocumentUploadError(ValueError):
 
 
 async def store_document(
-    upload: UploadFile, category: DocumentCategory, max_size_bytes: int
+    upload: UploadFile,
+    category: DocumentCategory,
+    max_size_bytes: int,
+    product_name: str | None = None,
 ) -> KnowledgeDocument:
     filename = Path(upload.filename or "").name
     extension = Path(filename).suffix.lower()
@@ -42,6 +46,7 @@ async def store_document(
         id=str(uuid4()),
         filename=filename,
         category=category,
+        product_name=product_name,
         size_bytes=len(content),
         content_type=upload.content_type or "application/octet-stream",
         uploaded_at=datetime.now(UTC),

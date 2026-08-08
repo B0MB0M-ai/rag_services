@@ -96,7 +96,8 @@ def test_data_upload_page_and_document_api() -> None:
     page = client.get("/data")
     assert page.status_code == 200
     assert "นำเข้าข้อมูลสำหรับ RAG" in page.text
-    assert "CSV หรือ XLSX" in page.text
+    assert "ชื่อสินค้า" in page.text
+    assert "รูปสินค้า" in page.text
     assert "PDF, DOCX หรือ TXT" in page.text
 
     response = client.post(
@@ -110,6 +111,52 @@ def test_data_upload_page_and_document_api() -> None:
     assert document["status"] == "waiting_for_index"
     assert DOCUMENT_CONTENT[document["id"]] == b"sample manual"
     assert client.get("/api/v1/documents").json()["meta"]["total"] == 1
+
+
+def test_product_upload_stores_image_and_manual_for_rag() -> None:
+    from app.repositories.catalog import DOCUMENT_CONTENT, KNOWLEDGE_DOCUMENTS
+
+    KNOWLEDGE_DOCUMENTS.clear()
+    DOCUMENT_CONTENT.clear()
+    response = client.post(
+        "/data/upload",
+        data={"product_name": "Hydraulic Pump HP-500"},
+        files={
+            "product_image": ("hp-500.png", b"product image", "image/png"),
+            "manual": ("hp-500.pdf", b"product manual", "application/pdf"),
+        },
+    )
+
+    assert response.status_code == 200
+    assert "เพิ่มข้อมูล Hydraulic Pump HP-500 สำเร็จ" in response.text
+    assert [document.category for document in KNOWLEDGE_DOCUMENTS] == [
+        "manual",
+        "product_image",
+    ]
+    assert all(
+        document.product_name == "Hydraulic Pump HP-500"
+        for document in KNOWLEDGE_DOCUMENTS
+    )
+
+
+def test_product_upload_does_not_keep_incomplete_product_data() -> None:
+    from app.repositories.catalog import DOCUMENT_CONTENT, KNOWLEDGE_DOCUMENTS
+
+    KNOWLEDGE_DOCUMENTS.clear()
+    DOCUMENT_CONTENT.clear()
+    response = client.post(
+        "/data/upload",
+        data={"product_name": "Incomplete product"},
+        files={
+            "product_image": ("product.png", b"product image", "image/png"),
+            "manual": ("manual.exe", b"invalid manual", "application/octet-stream"),
+        },
+    )
+
+    assert response.status_code == 200
+    assert "อัปโหลดไม่สำเร็จ" in response.text
+    assert KNOWLEDGE_DOCUMENTS == []
+    assert DOCUMENT_CONTENT == {}
 
 
 def test_document_upload_rejects_wrong_type_and_empty_files() -> None:
