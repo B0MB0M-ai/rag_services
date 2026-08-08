@@ -32,7 +32,11 @@ Browser -> FastAPI :8000 -> PostgreSQL 16 + pgvector
            `-> Jinja2 templates + HTMX/Alpine.js
 ```
 
-FastAPI serves both `GET /api/v1/health` and the responsive web interface. Jinja2 renders full pages and HTML fragments, HTMX handles server interactions, and Alpine.js provides small client-side behaviors.
+FastAPI serves both `GET /api/v1/health` and the responsive web interface. The data-ingestion
+workspace at `GET /data` accepts machine spreadsheets and technical documents, while
+`POST /api/v1/documents` exposes the same upload capability to API clients. Jinja2 renders full
+pages and HTML fragments, HTMX handles server interactions, and Alpine.js provides small
+client-side behaviors.
 
 ## Technology stack
 
@@ -117,8 +121,10 @@ _Placeholder: dashboard, three-column Service Assistant, and preliminary quotati
 
 ## Current limitations
 
-- Catalog endpoints currently use an empty in-process repository; production deployments should
-  replace it with the planned SQLAlchemy repository and explicit user-managed imports.
+- Catalog and uploaded-document records currently use an in-process repository; uploaded files
+  are available for the future extraction/indexing stage but reset when the process restarts.
+  Production deployments should replace this with the planned SQLAlchemy and object-storage
+  repositories.
 - Authentication, live document ingestion, OpenAI mode, and downloadable PDF rendering are not
   enabled in this portfolio build.
 - Docker images are development-oriented and are not hardened production artifacts.
