@@ -1,6 +1,9 @@
 from app.schemas.domain import ChatRequest, ChatResult, Citation
 
-WARNING = "การประเมินนี้เป็นข้อมูลเบื้องต้น ต้องตรวจสอบและยืนยันโดยช่างผู้มีคุณสมบัติก่อนดำเนินงาน"
+WARNING = (
+    "This is a preliminary assessment. It must be reviewed and confirmed by a "
+    "qualified technician before work begins."
+)
 
 
 def diagnose(request: ChatRequest) -> ChatResult:
@@ -10,15 +13,16 @@ def diagnose(request: ChatRequest) -> ChatResult:
     if any(term in normalized for term in oil_terms):
         return ChatResult(
             answer=(
-                "หยุดเครื่องและทำ lockout/tagout จากนั้นตรวจแรงดัน ข้อต่อ สาย "
-                "และซีลกระบอกไฮดรอลิก ทำความสะอาดบริเวณรั่วก่อนระบุตำแหน่ง "
-                "ห้ามใช้มือค้นหารอยรั่วขณะระบบมีแรงดัน"
+                "Stop the machine and perform lockout/tagout. Then inspect the pressure, "
+                "connections, hoses, and hydraulic cylinder seals. Clean the affected area "
+                "before locating the leak. Never use your hands to search for a leak while "
+                "the system is pressurized."
             ),
             confidence="sufficient",
             citations=[
                 Citation(
-                    document="HP-500 คู่มือบำรุงรักษา (ข้อมูลสังเคราะห์)",
-                    section="ระบบไฮดรอลิก §4.2",
+                    document="HP-500 Maintenance Manual (synthetic data)",
+                    section="Hydraulic System §4.2",
                     score=0.91,
                 )
             ],
@@ -27,8 +31,9 @@ def diagnose(request: ChatRequest) -> ChatResult:
         )
     return ChatResult(
         answer=(
-            "หลักฐานในฐานความรู้ยังไม่เพียงพอสำหรับแนะนำขั้นตอนหรืออะไหล่ "
-            "โปรดบันทึกอาการเพิ่มเติมและส่งต่อให้ช่างผู้มีคุณสมบัติ"
+            "The knowledge base does not contain enough evidence to recommend a procedure "
+            "or parts. Record additional symptoms and escalate the case to a qualified "
+            "technician."
         ),
         confidence="insufficient",
         citations=[],

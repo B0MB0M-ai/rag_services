@@ -1,7 +1,7 @@
 {% extends "base.html" %}{% block title %}Service Assistant · ServiceIQ{% endblock %}{% block content %}
 <main class="app-shell" x-data="assistant()">{% include "partials/sidebar.html" %}<section class="workspace assistant-page">
-<header class="topbar"><button class="menu-button" @click="navigationOpen=true" aria-label="เปิดเมนู">☰</button><div><p class="kicker">Service workspace</p><h1>ผู้ช่วยงานบริการ</h1></div><span class="badge amber">รอข้อมูล</span></header>
-<section class="panel empty-state assistant-empty"><div class="empty-state__icon" aria-hidden="true">▱</div><p class="kicker">Knowledge required</p><h2>ยังไม่สามารถเริ่มวิเคราะห์ได้</h2><p>กรุณาเพิ่มเครื่องจักรและอัปโหลดเอกสารความรู้ขององค์กรก่อน ระบบจะไม่แสดงเคส คำวินิจฉัย แหล่งอ้างอิง หรือราคาอะไหล่ตัวอย่าง</p><a class="primary" href="/docs">ตรวจสอบ API ที่พร้อมใช้งาน <span>→</span></a></section>
-</section><button class="scrim" x-show="navigationOpen" x-cloak @click="navigationOpen=false" aria-label="ปิดเมนู"></button></main>
+<header class="topbar"><button class="menu-button" @click="navigationOpen=true" aria-label="Open menu">☰</button><div><p class="kicker">Service workspace</p><h1>Service Assistant</h1></div><span class="badge amber">Awaiting data</span></header>
+<section class="panel empty-state assistant-empty"><div class="empty-state__icon" aria-hidden="true">▱</div><p class="kicker">Knowledge required</p><h2>Analysis is not available yet</h2><p>Add your machinery and upload your organization's knowledge documents first. The system will not display sample cases, diagnoses, citations, or part prices.</p><a class="primary" href="/docs">View available APIs <span>→</span></a></section>
+</section><button class="scrim" x-show="navigationOpen" x-cloak @click="navigationOpen=false" aria-label="Close menu"></button></main>
 <script>function assistant(){return{navigationOpen:false}}</script>
 {% endblock %}

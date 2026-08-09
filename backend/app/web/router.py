@@ -56,7 +56,7 @@ async def data_upload_submit(
     try:
         normalized_name = product_name.strip()
         if not normalized_name:
-            raise DocumentUploadError("กรุณาระบุชื่อสินค้า")
+            raise DocumentUploadError("Enter a product name.")
         image_document = await store_document(
             product_image,
             "product_image",
