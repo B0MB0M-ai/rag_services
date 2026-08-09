@@ -68,7 +68,7 @@ def test_chat_returns_citation_and_mandatory_warning() -> None:
     assert response.status_code == 200
     assert data["confidence"] == "sufficient"
     assert data["citations"][0]["score"] == 0.91
-    assert "เบื้องต้น" in data["warning"]
+    assert "preliminary assessment" in data["warning"]
 
 
 def test_chat_escalates_when_evidence_is_insufficient() -> None:
@@ -84,7 +84,7 @@ def test_catalog_and_assistant_page_are_available() -> None:
     assert client.get("/api/v1/parts").json()["meta"]["total"] == 0
     page = client.get("/assistant")
     assert page.status_code == 200
-    assert "ยังไม่สามารถเริ่มวิเคราะห์ได้" in page.text
+    assert "Analysis is not available yet" in page.text
     assert "HP-500" not in page.text
 
 
@@ -95,10 +95,10 @@ def test_data_upload_page_and_document_api() -> None:
     DOCUMENT_CONTENT.clear()
     page = client.get("/data")
     assert page.status_code == 200
-    assert "นำเข้าข้อมูลสำหรับ RAG" in page.text
-    assert "ชื่อสินค้า" in page.text
-    assert "รูปสินค้า" in page.text
-    assert "PDF, DOCX หรือ TXT" in page.text
+    assert "Import Data for RAG" in page.text
+    assert "Product name" in page.text
+    assert "Product image" in page.text
+    assert "PDF, DOCX, or TXT" in page.text
 
     response = client.post(
         "/api/v1/documents",
@@ -128,7 +128,7 @@ def test_product_upload_stores_image_and_manual_for_rag() -> None:
     )
 
     assert response.status_code == 200
-    assert "เพิ่มข้อมูล Hydraulic Pump HP-500 สำเร็จ" in response.text
+    assert "Hydraulic Pump HP-500 added successfully" in response.text
     assert [document.category for document in KNOWLEDGE_DOCUMENTS] == [
         "manual",
         "product_image",
@@ -154,7 +154,7 @@ def test_product_upload_does_not_keep_incomplete_product_data() -> None:
     )
 
     assert response.status_code == 200
-    assert "อัปโหลดไม่สำเร็จ" in response.text
+    assert "Upload failed" in response.text
     assert KNOWLEDGE_DOCUMENTS == []
     assert DOCUMENT_CONTENT == {}
 
@@ -166,7 +166,7 @@ def test_document_upload_rejects_wrong_type_and_empty_files() -> None:
         files={"file": ("manual.exe", b"unsafe", "application/octet-stream")},
     )
     assert wrong_type.status_code == 422
-    assert "ไม่รองรับ" in wrong_type.json()["detail"]
+    assert "Unsupported file type" in wrong_type.json()["detail"]
 
     empty = client.post(
         "/api/v1/documents",
@@ -174,4 +174,4 @@ def test_document_upload_rejects_wrong_type_and_empty_files() -> None:
         files={"file": ("machines.csv", b"", "text/csv")},
     )
     assert empty.status_code == 422
-    assert "ว่างเปล่า" in empty.json()["detail"]
+    assert "file is empty" in empty.json()["detail"]
