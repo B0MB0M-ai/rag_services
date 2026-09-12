@@ -39,7 +39,10 @@
 
         <form class="assistant-composer" @submit.prevent="submit" :class="loading && 'assistant-composer--loading'">
           <label class="sr-only" for="service-question">Describe the service issue</label>
-          <input id="service-question" x-ref="question" x-model="message" type="text" autocomplete="off" :placeholder="typingPlaceholder" placeholder="e.g. The hydraulic pump has an oil leak and shows a fault code…" required>
+          <span class="assistant-composer__typing" x-show="!message" aria-hidden="true">
+            <span x-text="typingPlaceholder"></span><i></i>
+          </span>
+          <input id="service-question" x-ref="question" x-model="message" type="text" autocomplete="off" placeholder="e.g. The hydraulic pump has an oil leak and shows a fault code…" required>
           <button type="submit" :disabled="loading" aria-label="Send service question">
             <span x-show="!loading" aria-hidden="true">↑</span>
             <span x-show="loading" x-cloak aria-hidden="true">···</span>
