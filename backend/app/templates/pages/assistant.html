@@ -1,6 +1,109 @@
-{% extends "base.html" %}{% block title %}Service Assistant · ServiceIQ{% endblock %}{% block content %}
-<main class="app-shell" x-data="{ navigationOpen: false, navigationCollapsed: false }" :class="navigationCollapsed && 'app-shell--navigation-collapsed'">{% include "partials/sidebar.html" %}<section class="workspace assistant-page">
-<header class="topbar"><button class="menu-button" type="button" @click="navigationOpen=true; navigationCollapsed=false" aria-label="Open navigation">☰</button><div><p class="kicker">Service workspace</p><h1>Service Assistant</h1></div><span class="badge amber">Awaiting data</span></header>
-<section class="panel empty-state assistant-empty"><div class="empty-state__icon" aria-hidden="true">▱</div><p class="kicker">Knowledge required</p><h2>Analysis is not available yet</h2><p>Upload your organization's product knowledge first. The system will not display sample cases, diagnoses, citations, or part prices.</p><a class="primary" href="/data">Import product data <span>→</span></a></section>
-</section><button class="scrim" x-show="navigationOpen" x-cloak @click="navigationOpen=false" aria-label="Close menu"></button></main>
+{% extends "base.html" %}
+{% block title %}Service Assistant · ServiceIQ{% endblock %}
+{% block content %}
+<main class="app-shell" x-data="{ navigationOpen: false, navigationCollapsed: false }" :class="navigationCollapsed && 'app-shell--navigation-collapsed'">
+  {% include "partials/sidebar.html" %}
+  <section class="workspace assistant-page">
+    <header class="topbar assistant-topbar">
+      <button class="menu-button" type="button" @click="navigationOpen=true; navigationCollapsed=false" aria-label="Open navigation">☰</button>
+      <div>
+        <p class="kicker">Service workspace</p>
+        <h1>Service Assistant</h1>
+      </div>
+      <div class="assistant-topbar__status"><span class="status-dot"></span>AI-assisted · technician reviewed</div>
+    </header>
+
+    <section
+      class="assistant-welcome"
+      aria-labelledby="assistant-title"
+      x-data="serviceAssistant()"
+    >
+      <div class="assistant-aura" aria-hidden="true"></div>
+      <div class="assistant-welcome__content">
+        <div class="assistant-label">
+          <span class="assistant-label__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M12 3a4 4 0 0 0-3.86 5.05A4.5 4.5 0 0 0 8.5 17H10v2.25a2 2 0 0 0 4 0V17h1.5a4.5 4.5 0 0 0 .36-8.95A4 4 0 0 0 12 3Z"/><path d="M9 10.5h6M12 8v5"/></svg>
+          </span>
+          Service intelligence
+        </div>
+
+        <h2 id="assistant-title">How can we get your<br><em>machine running?</em></h2>
+        <p class="assistant-lead">Describe the machine, symptoms, and any fault code you see.<br class="desktop-break"> One clear sentence is enough to begin.</p>
+        <p class="assistant-trust">AI-assisted diagnosis · Evidence-backed guidance · Always verify before repair</p>
+
+        <div class="assistant-prompts" aria-label="Example questions">
+          <button type="button" @click="usePrompt('Hydraulic pump is leaking oil near the shaft seal')">Hydraulic oil leak <span>↗</span></button>
+          <button type="button" @click="usePrompt('The machine will not start and shows a fault code')">Machine won’t start <span>↗</span></button>
+          <button type="button" @click="usePrompt('There is unusual vibration and noise during operation')">Unusual vibration <span>↗</span></button>
+        </div>
+
+        <form class="assistant-composer" @submit.prevent="submit" :class="loading && 'assistant-composer--loading'">
+          <label class="sr-only" for="service-question">Describe the service issue</label>
+          <input id="service-question" x-ref="question" x-model="message" type="text" autocomplete="off" placeholder="e.g. The hydraulic pump has an oil leak and shows a fault code…" required>
+          <button type="submit" :disabled="loading" aria-label="Send service question">
+            <span x-show="!loading" aria-hidden="true">↑</span>
+            <span x-show="loading" x-cloak aria-hidden="true">···</span>
+          </button>
+        </form>
+
+        <div class="assistant-response" x-show="answer || error" x-cloak aria-live="polite">
+          <p class="kicker" x-text="error ? 'Unable to analyse' : 'Preliminary guidance'"></p>
+          <p x-text="error || answer"></p>
+          <small x-show="citation" x-text="citation"></small>
+        </div>
+
+        <div class="assistant-steps" aria-label="How Service Assistant works">
+          <article><span>01</span><h3>Describe the issue</h3><p>Share the model, symptoms, and fault code if available.</p></article>
+          <article><span>02</span><h3>Review cited guidance</h3><p>We connect your question to imported service knowledge.</p></article>
+          <article><span>03</span><h3>Confirm before action</h3><p>A qualified technician reviews safety steps and next actions.</p></article>
+        </div>
+      </div>
+
+      <aside class="assistant-data-note">
+        <span aria-hidden="true">i</span>
+        <p><strong>Analysis is not available yet for unimported products.</strong> Add manuals and product data to improve answers, citations, and parts guidance.</p>
+        <a href="/data">Import data →</a>
+      </aside>
+    </section>
+  </section>
+  <button class="scrim" x-show="navigationOpen" x-cloak @click="navigationOpen=false" aria-label="Close menu"></button>
+</main>
+
+<script>
+  function serviceAssistant() {
+    return {
+      message: '',
+      answer: '',
+      citation: '',
+      error: '',
+      loading: false,
+      usePrompt(prompt) {
+        this.message = prompt;
+        this.$nextTick(() => this.$refs.question.focus());
+      },
+      async submit() {
+        this.loading = true;
+        this.answer = '';
+        this.citation = '';
+        this.error = '';
+        try {
+          const response = await fetch('/api/v1/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: this.message })
+          });
+          if (!response.ok) throw new Error('Request failed');
+          const payload = await response.json();
+          this.answer = payload.data.answer;
+          const source = payload.data.citations[0];
+          this.citation = source ? `Source: ${source.document} · ${source.section}` : '';
+        } catch (error) {
+          this.error = 'Please try again, or import product knowledge before continuing.';
+        } finally {
+          this.loading = false;
+        }
+      }
+    };
+  }
+</script>
 {% endblock %}

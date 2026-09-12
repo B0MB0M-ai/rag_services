@@ -85,6 +85,10 @@ def test_catalog_and_assistant_page_are_available() -> None:
     page = client.get("/assistant")
     assert page.status_code == 200
     assert "Analysis is not available yet" in page.text
+    assert "How can we get your" in page.text
+    assert "Hydraulic oil leak" in page.text
+    assert 'action="/api/v1/chat"' not in page.text
+    assert "fetch('/api/v1/chat'" in page.text
     assert "HP-500" not in page.text
 
 
