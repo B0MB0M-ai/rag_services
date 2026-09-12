@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Case Information · ServiceIQ{% endblock %}
+{% block content %}
+<main class="app-shell" x-data="{ navigationOpen: false, navigationCollapsed: false }" :class="navigationCollapsed && 'app-shell--navigation-collapsed'">
+  {% include "partials/sidebar.html" %}
+  <section class="workspace">
+    <header class="topbar"><button class="menu-button" type="button" @click="navigationOpen=true; navigationCollapsed=false" aria-label="Open navigation">☰</button><div><p class="kicker">Knowledge records</p><h1>Case Information</h1></div><span class="user-chip">SO</span></header>
+    <section class="panel empty-state case-information-empty">
+      <div class="empty-state__icon" aria-hidden="true">▱</div>
+      <p class="kicker">No service cases</p>
+      <h2>Case information will appear here</h2>
+      <p>There are no imported service cases yet. Once case ingestion is available, this page will provide a single place to review the information used by the Service Assistant.</p>
+      <a class="primary" href="/data">Import product data <span>→</span></a>
+    </section>
+  </section>
+  <button class="scrim" x-show="navigationOpen" x-cloak @click="navigationOpen=false" aria-label="Close navigation"></button>
+</main>
+{% endblock %}

@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Import Data · Service Intelligence{% endblock %}
 {% block content %}
-<main class="app-shell" x-data="{ navigationOpen: false }">
+<main class="app-shell" x-data="{ navigationOpen: false, navigationCollapsed: false }" :class="navigationCollapsed && 'app-shell--navigation-collapsed'">
   {% include "partials/sidebar.html" %}
   <section class="workspace">
-    <header class="topbar"><button class="menu-button" @click="navigationOpen=true" aria-label="Open menu">☰</button><div><p class="kicker">Knowledge ingestion</p><h1>Import Data for RAG</h1></div><span class="user-chip">SO</span></header>
+    <header class="topbar"><button class="menu-button" type="button" @click="navigationOpen=true; navigationCollapsed=false" aria-label="Open navigation">☰</button><div><p class="kicker">Knowledge ingestion</p><h1>Import Data for RAG</h1></div><span class="user-chip">SO</span></header>
     <section class="upload-intro"><div><span class="eyebrow">Product knowledge only</span><h2>Add product data in 3 steps<br>for answers grounded in real data</h2><p>Enter the product name, then attach a product image and its manual in order. Only these three items will be prepared for the RAG knowledge base.</p></div><div class="pipeline" aria-label="Required data"><span class="pipeline__active">1<br><small>Product name</small></span><i></i><span>2<br><small>Product image</small></span><i></i><span>3<br><small>Manual</small></span></div></section>
 
     <form class="panel product-upload" hx-post="/data/upload" hx-target="#upload-result" hx-encoding="multipart/form-data" hx-indicator="#uploading">

@@ -44,6 +44,14 @@ async def data_upload(request: Request) -> HTMLResponse:
     )
 
 
+@web_router.get("/cases", response_class=HTMLResponse)
+async def case_information(request: Request) -> HTMLResponse:
+    """Render the service case information workspace."""
+    return templates.TemplateResponse(
+        request=request, name="pages/cases.html", context={"active": "cases"}
+    )
+
+
 @web_router.post("/data/upload", response_class=HTMLResponse)
 async def data_upload_submit(
     request: Request,
