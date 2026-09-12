@@ -60,6 +60,23 @@ def test_unknown_part_is_rejected_instead_of_accepting_model_price() -> None:
 
 
 def test_chat_returns_citation_and_mandatory_warning() -> None:
+    from app.repositories.catalog import DOCUMENT_CHUNKS, DOCUMENT_CONTENT, KNOWLEDGE_DOCUMENTS
+
+    KNOWLEDGE_DOCUMENTS.clear()
+    DOCUMENT_CONTENT.clear()
+    DOCUMENT_CHUNKS.clear()
+    upload = client.post(
+        "/api/v1/documents",
+        data={"category": "manual"},
+        files={
+            "file": (
+                "hp-500.txt",
+                b"HP-500 oil leak E-HYD-04: stop the machine and inspect hydraulic hoses.",
+                "text/plain",
+            )
+        },
+    )
+    assert upload.json()["data"]["status"] == "indexed"
     response = client.post(
         "/api/v1/chat",
         json={"message": "HP-500 น้ำมันรั่ว", "fault_code": "E-HYD-04"},
@@ -67,11 +84,18 @@ def test_chat_returns_citation_and_mandatory_warning() -> None:
     data = response.json()["data"]
     assert response.status_code == 200
     assert data["confidence"] == "sufficient"
-    assert data["citations"][0]["score"] == 0.91
+    assert data["citations"][0]["document"] == "hp-500.txt"
+    assert data["citations"][0]["score"] >= 0.35
+    assert "inspect hydraulic hoses" in data["answer"]
     assert "preliminary assessment" in data["warning"]
 
 
 def test_chat_escalates_when_evidence_is_insufficient() -> None:
+    from app.repositories.catalog import DOCUMENT_CHUNKS, DOCUMENT_CONTENT, KNOWLEDGE_DOCUMENTS
+
+    KNOWLEDGE_DOCUMENTS.clear()
+    DOCUMENT_CONTENT.clear()
+    DOCUMENT_CHUNKS.clear()
     response = client.post("/api/v1/chat", json={"message": "อาการที่ไม่เคยพบ xyz"})
     data = response.json()["data"]
     assert data["confidence"] == "insufficient"
@@ -120,7 +144,8 @@ def test_data_upload_page_and_document_api() -> None:
     assert response.status_code == 201
     document = response.json()["data"]
     assert document["filename"] == "safety.pdf"
-    assert document["status"] == "waiting_for_index"
+    assert document["status"] == "indexed"
+    assert document["chunk_count"] == 1
     assert DOCUMENT_CONTENT[document["id"]] == b"sample manual"
     assert client.get("/api/v1/documents").json()["meta"]["total"] == 1
 

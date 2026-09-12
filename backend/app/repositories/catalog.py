@@ -1,4 +1,4 @@
-from app.schemas.domain import KnowledgeDocument, Machine, Part
+from app.schemas.domain import DocumentChunk, KnowledgeDocument, Machine, Part
 
 # A new workspace must not imply that customer-owned equipment or commercial data
 # already exists. These collections are populated only through an explicit import
@@ -8,6 +8,7 @@ PARTS: list[Part] = []
 KNOWLEDGE_DOCUMENTS: list[KnowledgeDocument] = []
 # Process-local storage keeps uploaded content available to a later extraction/indexing step.
 DOCUMENT_CONTENT: dict[str, bytes] = {}
+DOCUMENT_CHUNKS: dict[str, list[DocumentChunk]] = {}
 
 
 def get_part(part_id: str) -> Part | None:

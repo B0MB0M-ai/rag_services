@@ -6,8 +6,8 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from app.core.config import get_settings
-from app.repositories.catalog import DOCUMENT_CONTENT, KNOWLEDGE_DOCUMENTS
-from app.services.documents import DocumentUploadError, store_document
+from app.repositories.catalog import KNOWLEDGE_DOCUMENTS
+from app.services.documents import DocumentUploadError, remove_document, store_document
 
 web_router = APIRouter(include_in_schema=False)
 templates = Jinja2Templates(directory=Path(__file__).parent.parent / "templates")
@@ -79,6 +79,16 @@ async def data_upload_submit(
             normalized_name,
         )
         stored_document_ids.append(manual_document.id)
+        failed = next(
+            (
+                document
+                for document in (image_document, manual_document)
+                if document.status == "failed"
+            ),
+            None,
+        )
+        if failed is not None:
+            raise DocumentUploadError(failed.indexing_error or "Document indexing failed")
         context = {
             "product_name": normalized_name,
             "documents": [image_document, manual_document],
@@ -86,13 +96,8 @@ async def data_upload_submit(
         }
     except DocumentUploadError as error:
         if stored_document_ids:
-            KNOWLEDGE_DOCUMENTS[:] = [
-                document
-                for document in KNOWLEDGE_DOCUMENTS
-                if document.id not in stored_document_ids
-            ]
             for document_id in stored_document_ids:
-                DOCUMENT_CONTENT.pop(document_id, None)
+                remove_document(document_id)
         context = {"documents": [], "error": str(error)}
     return templates.TemplateResponse(
         request=request, name="partials/upload_result.html", context=context

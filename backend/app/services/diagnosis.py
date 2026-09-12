@@ -1,3 +1,5 @@
+from app.core.config import get_settings
+from app.rag.retrieval import retrieve
 from app.schemas.domain import ChatRequest, ChatResult, Citation
 
 WARNING = (
@@ -7,26 +9,26 @@ WARNING = (
 
 
 def diagnose(request: ChatRequest) -> ChatResult:
-    """Deterministic mock RAG provider for safe, zero-cost demonstrations."""
-    normalized = f"{request.message} {request.fault_code or ''}".lower()
-    oil_terms = ("oil", "leak", "น้ำมัน", "รั่ว", "e-hyd-04")
-    if any(term in normalized for term in oil_terms):
+    """Retrieve indexed evidence and produce a deterministic, grounded response."""
+    query = " ".join(part for part in (request.message, request.fault_code) if part)
+    results = retrieve(query, request.machine_id)
+    threshold = get_settings().rag_min_evidence_score
+    evidence = [result for result in results if result.score >= threshold]
+    if evidence:
+        excerpts = [result.chunk.content for result in evidence[:3]]
         return ChatResult(
-            answer=(
-                "Stop the machine and perform lockout/tagout. Then inspect the pressure, "
-                "connections, hoses, and hydraulic cylinder seals. Clean the affected area "
-                "before locating the leak. Never use your hands to search for a leak while "
-                "the system is pressurized."
-            ),
+            answer="Based on the imported service documentation:\n\n" + "\n\n".join(excerpts),
             confidence="sufficient",
             citations=[
                 Citation(
-                    document="HP-500 Maintenance Manual (synthetic data)",
-                    section="Hydraulic System §4.2",
-                    score=0.91,
+                    document=result.document.filename,
+                    section=result.chunk.section,
+                    page=result.chunk.page,
+                    score=round(result.score, 4),
                 )
+                for result in evidence
             ],
-            suggested_part_ids=["p-seal-hp500", "p-filter-h46"],
+            suggested_part_ids=[],
             warning=WARNING,
         )
     return ChatResult(
