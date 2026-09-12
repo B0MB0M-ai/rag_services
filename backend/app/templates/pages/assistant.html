@@ -39,7 +39,7 @@
 
         <form class="assistant-composer" @submit.prevent="submit" :class="loading && 'assistant-composer--loading'">
           <label class="sr-only" for="service-question">Describe the service issue</label>
-          <input id="service-question" x-ref="question" x-model="message" type="text" autocomplete="off" placeholder="e.g. The hydraulic pump has an oil leak and shows a fault code…" required>
+          <input id="service-question" x-ref="question" x-model="message" type="text" autocomplete="off" :placeholder="typingPlaceholder" placeholder="e.g. The hydraulic pump has an oil leak and shows a fault code…" required>
           <button type="submit" :disabled="loading" aria-label="Send service question">
             <span x-show="!loading" aria-hidden="true">↑</span>
             <span x-show="loading" x-cloak aria-hidden="true">···</span>
@@ -77,6 +77,45 @@
       citation: '',
       error: '',
       loading: false,
+      typingPlaceholder: '',
+      typingTimer: null,
+      promptExamples: [
+        'e.g. The hydraulic pump is leaking oil near the shaft seal',
+        'e.g. The machine will not start and shows fault code E-07',
+        'e.g. There is unusual vibration during operation'
+      ],
+      init() {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          this.typingPlaceholder = this.promptExamples[0];
+          return;
+        }
+        this.animatePlaceholder();
+      },
+      destroy() {
+        window.clearTimeout(this.typingTimer);
+      },
+      animatePlaceholder(exampleIndex = 0, characterIndex = 0, deleting = false) {
+        const example = this.promptExamples[exampleIndex];
+        const nextCharacterIndex = deleting ? characterIndex - 1 : characterIndex + 1;
+        this.typingPlaceholder = example.slice(0, Math.max(0, nextCharacterIndex));
+
+        let delay = deleting ? 28 : 52;
+        let nextDeleting = deleting;
+        let nextExampleIndex = exampleIndex;
+        if (!deleting && nextCharacterIndex === example.length) {
+          delay = 1800;
+          nextDeleting = true;
+        } else if (deleting && nextCharacterIndex === 0) {
+          delay = 350;
+          nextDeleting = false;
+          nextExampleIndex = (exampleIndex + 1) % this.promptExamples.length;
+        }
+
+        this.typingTimer = window.setTimeout(
+          () => this.animatePlaceholder(nextExampleIndex, nextCharacterIndex, nextDeleting),
+          delay
+        );
+      },
       usePrompt(prompt) {
         this.message = prompt;
         this.$nextTick(() => this.$refs.question.focus());
