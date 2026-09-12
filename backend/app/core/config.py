@@ -1,5 +1,6 @@
 from functools import lru_cache
 
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -8,6 +9,8 @@ class Settings(BaseSettings):
 
     app_env: str = "development"
     mock_ai: bool = True
+    openai_api_key: SecretStr | None = None
+    openai_response_model: str = "gpt-5-mini"
     cors_origins: str = "http://localhost:8000"
     rag_min_evidence_score: float = 0.35
     rag_chunk_size: int = 800

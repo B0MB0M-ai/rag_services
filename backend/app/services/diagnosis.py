@@ -1,6 +1,7 @@
 from app.core.config import get_settings
 from app.rag.retrieval import retrieve
 from app.schemas.domain import ChatRequest, ChatResult, Citation
+from app.services.generation import DiagnosisGenerator, get_diagnosis_generator
 
 WARNING = (
     "This is a preliminary assessment. It must be reviewed and confirmed by a "
@@ -8,8 +9,8 @@ WARNING = (
 )
 
 
-def diagnose(request: ChatRequest) -> ChatResult:
-    """Retrieve indexed evidence and produce a deterministic, grounded response."""
+async def diagnose(request: ChatRequest, generator: DiagnosisGenerator | None = None) -> ChatResult:
+    """Retrieve indexed evidence and generate grounded technical guidance."""
     query = " ".join(part for part in (request.message, request.fault_code) if part)
     results = retrieve(query, request.machine_id)
     threshold = get_settings().rag_min_evidence_score
@@ -20,10 +21,10 @@ def diagnose(request: ChatRequest) -> ChatResult:
         # best-ranked chunks rather than acting as though the knowledge base is empty.
         evidence = [result for result in results if result.document.category == "manual"][:3]
     if evidence:
-        excerpts = [result.chunk.content for result in evidence[:3]]
+        generated = await (generator or get_diagnosis_generator()).generate(request, evidence[:3])
         return ChatResult(
-            answer="Based on the imported service documentation:\n\n" + "\n\n".join(excerpts),
-            confidence="sufficient",
+            answer=generated.answer,
+            confidence=generated.confidence,
             citations=[
                 Citation(
                     document=result.document.filename,
