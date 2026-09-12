@@ -10,6 +10,9 @@ import zipfile
 from csv import reader as csv_reader
 from dataclasses import dataclass
 
+from pypdf import PdfReader
+from pypdf.errors import PdfReadError
+
 from app.core.config import get_settings
 from app.repositories.catalog import DOCUMENT_CHUNKS
 from app.schemas.domain import DocumentChunk, KnowledgeDocument
@@ -56,21 +59,26 @@ def extract_sections(document: KnowledgeDocument, content: bytes) -> list[Extrac
     extension = document.filename.lower().rsplit(".", 1)[-1]
     try:
         if extension == "pdf":
-            # The dependency-free extractor handles literal PDF text operators. Complex/scanned
-            # PDFs remain observable as failed indexing and can later be routed to OCR workers.
-            raw = content.decode("latin-1")
-            pages = raw.split("/Type /Page")
-            sections = []
-            for number, page in enumerate(pages[1:] or [raw], 1):
-                values = re.findall(r"\(([^()]*)\)\s*T[jJ]", page)
-                text = " ".join(_unescape_pdf(value) for value in values)
+            try:
+                pages = PdfReader(io.BytesIO(content)).pages
+            except PdfReadError as error:
+                # Keep plain-text PDF fixtures usable while rejecting unreadable real PDFs.
+                if content.startswith(b"%PDF"):
+                    raise DocumentIndexingError(
+                        f"Unable to extract {document.filename}: {error}"
+                    ) from error
+                fallback = content.decode("utf-8")
+                return [ExtractedSection(fallback, "Document")]
+            sections: list[ExtractedSection] = []
+            for number, page in enumerate(pages, 1):
+                text = page.extract_text() or ""
                 if text.strip():
                     sections.append(ExtractedSection(text, f"Page {number}", number))
             if sections:
                 return sections
-            # Plain-text fixtures and producer-specific PDFs get a conservative fallback.
-            fallback = content.decode("utf-8", errors="ignore")
-            return [ExtractedSection(fallback, "Document")]
+            raise DocumentIndexingError(
+                "The PDF contains no searchable text. Upload a text-based PDF, DOCX, or TXT file."
+            )
         if extension == "docx":
             with zipfile.ZipFile(io.BytesIO(content)) as archive:
                 root = ET.fromstring(archive.read("word/document.xml"))
@@ -100,10 +108,6 @@ def extract_sections(document: KnowledgeDocument, content: bytes) -> list[Extrac
     ) as error:
         raise DocumentIndexingError(f"Unable to extract {document.filename}: {error}") from error
     return []
-
-
-def _unescape_pdf(value: str) -> str:
-    return value.replace(r"\(", "(").replace(r"\)", ")").replace(r"\\", "\\")
 
 
 def _extract_xlsx(content: bytes) -> list[ExtractedSection]:

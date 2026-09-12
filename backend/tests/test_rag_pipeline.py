@@ -58,6 +58,21 @@ def test_docx_is_extracted_indexed_and_retrieved_with_source() -> None:
     assert answer["suggested_part_ids"] == []
 
 
+def test_uploaded_manual_is_used_when_relevance_is_below_threshold() -> None:
+    response = client.post(
+        "/api/v1/documents",
+        data={"category": "manual"},
+        files={"file": ("คู่มือ.txt", "ตรวจสอบวาล์วนิรภัยก่อนเริ่มเครื่อง".encode(), "text/plain")},
+    )
+    assert response.json()["data"]["status"] == "indexed"
+
+    answer = client.post("/api/v1/chat", json={"message": "ต้องเตรียมเครื่องอย่างไร"}).json()["data"]
+
+    assert answer["confidence"] == "sufficient"
+    assert "ตรวจสอบวาล์วนิรภัยก่อนเริ่มเครื่อง" in answer["answer"]
+    assert answer["citations"][0]["document"] == "คู่มือ.txt"
+
+
 def test_invalid_docx_has_observable_failed_state_and_can_be_reindexed() -> None:
     response = client.post(
         "/api/v1/documents",

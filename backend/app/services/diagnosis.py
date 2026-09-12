@@ -14,6 +14,11 @@ def diagnose(request: ChatRequest) -> ChatResult:
     results = retrieve(query, request.machine_id)
     threshold = get_settings().rag_min_evidence_score
     evidence = [result for result in results if result.score >= threshold]
+    if not evidence:
+        # An imported manual is still useful context when the lightweight local
+        # retriever cannot bridge paraphrases or different languages. Prefer its
+        # best-ranked chunks rather than acting as though the knowledge base is empty.
+        evidence = [result for result in results if result.document.category == "manual"][:3]
     if evidence:
         excerpts = [result.chunk.content for result in evidence[:3]]
         return ChatResult(
