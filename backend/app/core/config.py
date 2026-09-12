@@ -10,6 +10,11 @@ class Settings(BaseSettings):
     mock_ai: bool = True
     cors_origins: str = "http://localhost:8000"
     rag_min_evidence_score: float = 0.35
+    rag_chunk_size: int = 800
+    rag_chunk_overlap: int = 120
+    rag_vector_results: int = 12
+    rag_keyword_results: int = 12
+    rag_final_context_count: int = 6
     max_upload_size_mb: int = 20
 
     model_config = SettingsConfigDict(env_file="../.env", extra="ignore")

@@ -7,7 +7,8 @@ An internal portfolio-demo application for industrial machinery service officers
 > **Phase status:** Integrated portfolio demo. The application includes a polished dashboard,
 > service-assistant workflow, deterministic cited mock diagnosis, catalog APIs, and exact
 > server-side estimate calculation. PostgreSQL persistence, production authentication, document
-> extraction, and PDF rendering remain deployment extensions described below.
+> durable PostgreSQL persistence, production authentication, and PDF rendering remain deployment
+> extensions described below.
 
 ## Business problem and guardrails
 
@@ -121,11 +122,11 @@ _Placeholder: dashboard, three-column Service Assistant, and preliminary quotati
 
 ## Current limitations
 
-- Catalog and uploaded-document records currently use an in-process repository; uploaded files
-  are available for the future extraction/indexing stage but reset when the process restarts.
+- Catalog, uploaded-document records, extracted chunks, and deterministic embeddings currently use
+  an in-process repository; the complete local RAG flow works immediately but resets on restart.
   Production deployments should replace this with the planned SQLAlchemy and object-storage
   repositories.
-- Authentication, live document ingestion, OpenAI mode, and downloadable PDF rendering are not
+- Authentication, OpenAI generation/embedding mode, OCR, and downloadable PDF rendering are not
   enabled in this portfolio build.
 - Docker images are development-oriented and are not hardened production artifacts.
 

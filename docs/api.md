@@ -1,3 +1,8 @@
 # API
 
-All endpoints use `/api/v1`. Phase 1 provides `GET /api/v1/health`, with interactive OpenAPI at `/docs`. Machine, chat/diagnosis, estimate/PDF, document, spare-parts, dashboard, conversation, and feedback endpoints are scheduled in Phases 2–4 and will use consistent typed response envelopes.
+All endpoints use `/api/v1`, with interactive OpenAPI at `/docs`. `POST /api/v1/documents` validates,
+stores, extracts, chunks, and indexes an uploaded knowledge document; `GET /api/v1/documents` lists
+its status and `POST /api/v1/documents/{document_id}/index` retries indexing. `POST /api/v1/chat`
+retrieves indexed evidence and returns a typed answer with confidence, citations, candidate part IDs,
+and the mandatory preliminary-assessment warning. Catalog and deterministic estimate endpoints use
+consistent typed response envelopes.

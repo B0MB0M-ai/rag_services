@@ -68,6 +68,7 @@ class Citation(BaseModel):
     document: str
     section: str
     score: float
+    page: int | None = None
 
 
 class KnowledgeDocument(BaseModel):
@@ -77,8 +78,22 @@ class KnowledgeDocument(BaseModel):
     product_name: str | None = None
     size_bytes: int = Field(ge=0)
     content_type: str
-    status: Literal["waiting_for_index"] = "waiting_for_index"
+    status: Literal["waiting_for_index", "indexing", "indexed", "failed"] = (
+        "waiting_for_index"
+    )
+    chunk_count: int = Field(default=0, ge=0)
+    indexing_error: str | None = None
     uploaded_at: datetime
+
+
+class DocumentChunk(BaseModel):
+    id: str
+    document_id: str
+    content: str
+    section: str
+    page: int | None = None
+    ordinal: int = Field(ge=0)
+    embedding: list[float]
 
 
 class ChatResult(BaseModel):

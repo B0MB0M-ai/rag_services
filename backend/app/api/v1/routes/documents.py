@@ -3,7 +3,8 @@ from typing import Annotated
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
 
 from app.core.config import get_settings
-from app.repositories.catalog import KNOWLEDGE_DOCUMENTS
+from app.rag.indexing import index_document
+from app.repositories.catalog import DOCUMENT_CONTENT, KNOWLEDGE_DOCUMENTS
 from app.schemas.domain import KnowledgeDocument
 from app.services.documents import DocumentCategory, DocumentUploadError, store_document
 
@@ -31,4 +32,14 @@ async def upload_document(
         )
     except DocumentUploadError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error
+    return {"data": document}
+
+
+@router.post("/{document_id}/index", response_model=dict[str, KnowledgeDocument])
+async def reindex_document(document_id: str) -> dict[str, KnowledgeDocument]:
+    document = next((item for item in KNOWLEDGE_DOCUMENTS if item.id == document_id), None)
+    content = DOCUMENT_CONTENT.get(document_id)
+    if document is None or content is None:
+        raise HTTPException(status_code=404, detail="Document not found")
+    index_document(document, content)
     return {"data": document}
