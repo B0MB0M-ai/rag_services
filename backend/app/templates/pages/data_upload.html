@@ -3,21 +3,38 @@
 {% block content %}
 <main class="app-shell" x-data="{ navigationOpen: false, navigationCollapsed: false }" :class="navigationCollapsed && 'app-shell--navigation-collapsed'">
   {% include "partials/sidebar.html" %}
-  <section class="workspace">
-    <header class="topbar"><button class="menu-button" type="button" @click="navigationOpen=true; navigationCollapsed=false" aria-label="Open navigation">☰</button><div><p class="kicker">Knowledge ingestion</p><h1>Import Data for RAG</h1></div><span class="user-chip">SO</span></header>
-    <section class="upload-intro"><div><span class="eyebrow">Product knowledge only</span><h2>Add product data in 3 steps<br>for answers grounded in real data</h2><p>Enter the product name, then attach a product image and its manual in order. Only these three items will be prepared for the RAG knowledge base.</p></div><div class="pipeline" aria-label="Required data"><span class="pipeline__active">1<br><small>Product name</small></span><i></i><span>2<br><small>Product image</small></span><i></i><span>3<br><small>Manual</small></span></div></section>
+  <section class="workspace import-page">
+    <header class="topbar refined-topbar">
+      <button class="menu-button" type="button" @click="navigationOpen=true; navigationCollapsed=false" aria-label="Open navigation">☰</button>
+      <div><p class="kicker">Knowledge ingestion</p><h1>Import Data for RAG</h1></div>
+      <div class="page-status"><span class="status-dot"></span>Secure upload</div>
+    </header>
 
-    <form class="panel product-upload" hx-post="/data/upload" hx-target="#upload-result" hx-encoding="multipart/form-data" hx-indicator="#uploading">
-      <div class="panel-title"><div><p class="kicker">Required product data</p><h3>Data for RAG import</h3></div><span class="badge green">3 steps</span></div>
-      <ol class="upload-steps">
-        <li class="upload-step"><span class="upload-step__number">1</span><div class="upload-step__content"><label for="product-name">Product name</label><p>The name used to identify and search for this product in the system</p><input id="product-name" name="product_name" type="text" required maxlength="200" placeholder="e.g. Hydraulic Pump HP-500" autocomplete="off"></div></li>
-        <li class="upload-step"><span class="upload-step__number">2</span><div class="upload-step__content"><label for="product-image">Product image</label><p>Supports JPG, PNG, or WEBP · Up to {{ max_upload_size_mb }} MB</p><label class="drop-zone drop-zone--compact" for="product-image"><strong>Select a product image</strong><span>Use a clear image that shows the product</span><input id="product-image" required type="file" name="product_image" accept="image/jpeg,image/png,image/webp"><b>Select image</b></label></div></li>
-        <li class="upload-step"><span class="upload-step__number">3</span><div class="upload-step__content"><label for="manual">Product manual</label><p>Supports PDF, DOCX, or TXT · Up to {{ max_upload_size_mb }} MB</p><label class="drop-zone drop-zone--compact" for="manual"><strong>Select a manual</strong><span>Operating, repair, or technical documentation</span><input id="manual" required type="file" name="manual" accept=".pdf,.docx,.txt"><b>Select manual</b></label></div></li>
-      </ol>
-      <button class="primary wide" type="submit">Upload all 3 items <span>↑</span></button>
-    </form>
-    <div id="uploading" class="htmx-indicator upload-message">Uploading, please wait…</div><div id="upload-result" aria-live="polite"></div>
-    <section class="panel recent-files"><div class="panel-title"><div><p class="kicker">Recent uploads</p><h3>Recently uploaded files</h3></div><span class="badge green">{{ documents|length }} {{ 'file' if documents|length == 1 else 'files' }}</span></div>{% if documents %}{% for item in documents %}<div class="file-row"><span class="file-row__icon">{{ '▧' if item.category == 'product_image' else '▱' }}</span><div><strong>{{ item.filename }}</strong><small>{% if item.product_name %}{{ item.product_name }} · {% endif %}{{ 'Product image' if item.category == 'product_image' else ('Manual' if item.category == 'manual' else 'Existing data') }} · {{ (item.size_bytes / 1024)|round(1) }} KB</small></div><span class="badge {{ 'green' if item.status == 'indexed' else 'amber' }}">{{ item.status|replace('_', ' ')|title }}{% if item.chunk_count %} · {{ item.chunk_count }} chunks{% endif %}</span></div>{% endfor %}{% else %}<div class="files-empty">No product data yet. Files will appear here after all three items are uploaded.</div>{% endif %}</section>
-  </section><button class="scrim" x-show="navigationOpen" x-cloak @click="navigationOpen=false" aria-label="Close menu"></button>
+    <section class="import-canvas" aria-labelledby="import-title">
+      <div class="page-aura page-aura--right" aria-hidden="true"></div>
+      <div class="import-heading">
+        <div><div class="section-label"><span class="section-label__icon">↑</span> Build your knowledge base</div><h2 id="import-title">Bring your product knowledge<br><em>into one trusted place.</em></h2><p>Pair each product with an image and its manual. We’ll prepare the content so Service Assistant can find grounded, relevant answers.</p></div>
+        <ol class="refined-pipeline" aria-label="Required product data">
+          <li class="refined-pipeline__active"><span>01</span><div><strong>Name</strong><small>Identify product</small></div></li>
+          <li><span>02</span><div><strong>Image</strong><small>Show product</small></div></li>
+          <li><span>03</span><div><strong>Manual</strong><small>Add knowledge</small></div></li>
+        </ol>
+      </div>
+
+      <form class="import-form" hx-post="/data/upload" hx-target="#upload-result" hx-encoding="multipart/form-data" hx-indicator="#uploading">
+        <div class="import-form__head"><div><p class="kicker">Required product data</p><h3>Complete all three details</h3></div><span class="privacy-note">⌾ Files stay in your workspace</span></div>
+        <ol class="import-fields">
+          <li class="import-field import-field--name"><span class="import-field__number">01</span><div class="import-field__body"><label for="product-name">Product name</label><p>The name your team will use to identify this product.</p><div class="text-field"><span aria-hidden="true">⌁</span><input id="product-name" name="product_name" type="text" required maxlength="200" placeholder="e.g. Hydraulic Pump HP-500" autocomplete="off"></div></div></li>
+          <li class="import-field"><span class="import-field__number">02</span><div class="import-field__body"><label for="product-image">Product image</label><p>JPG, PNG, or WEBP · Up to {{ max_upload_size_mb }} MB</p><label class="refined-dropzone" for="product-image"><span class="refined-dropzone__icon" aria-hidden="true">▧</span><span><strong>Drop an image here</strong><small>or choose a clear product photo</small></span><b>Choose image</b><input id="product-image" required type="file" name="product_image" accept="image/jpeg,image/png,image/webp"></label></div></li>
+          <li class="import-field"><span class="import-field__number">03</span><div class="import-field__body"><label for="manual">Product manual</label><p>PDF, DOCX, or TXT · Up to {{ max_upload_size_mb }} MB</p><label class="refined-dropzone" for="manual"><span class="refined-dropzone__icon refined-dropzone__icon--violet" aria-hidden="true">▤</span><span><strong>Drop a manual here</strong><small>Operating, repair, or technical documentation</small></span><b>Choose manual</b><input id="manual" required type="file" name="manual" accept=".pdf,.docx,.txt"></label></div></li>
+        </ol>
+        <div class="import-submit"><p><span>i</span> All three items are linked as one product record.</p><button class="refined-primary" type="submit">Import product data <span>↑</span></button></div>
+      </form>
+      <div id="uploading" class="htmx-indicator upload-message">Uploading, please wait…</div><div id="upload-result" aria-live="polite"></div>
+
+      <section class="recent-imports"><div class="recent-imports__head"><div><p class="kicker">Recent uploads</p><h3>Your product knowledge</h3></div><span>{{ documents|length }} {{ 'file' if documents|length == 1 else 'files' }}</span></div>{% if documents %}{% for item in documents %}<div class="file-row"><span class="file-row__icon">{{ '▧' if item.category == 'product_image' else '▱' }}</span><div><strong>{{ item.filename }}</strong><small>{% if item.product_name %}{{ item.product_name }} · {% endif %}{{ 'Product image' if item.category == 'product_image' else ('Manual' if item.category == 'manual' else 'Existing data') }} · {{ (item.size_bytes / 1024)|round(1) }} KB</small></div><span class="badge {{ 'green' if item.status == 'indexed' else 'amber' }}">{{ item.status|replace('_', ' ')|title }}{% if item.chunk_count %} · {{ item.chunk_count }} chunks{% endif %}</span></div>{% endfor %}{% else %}<div class="recent-imports__empty"><span aria-hidden="true">◇</span><div><strong>No product knowledge yet</strong><small>Your uploaded files will appear here, ready for Service Assistant.</small></div></div>{% endif %}</section>
+    </section>
+  </section>
+  <button class="scrim" x-show="navigationOpen" x-cloak @click="navigationOpen=false" aria-label="Close menu"></button>
 </main>
 {% endblock %}

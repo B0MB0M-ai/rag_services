@@ -3,11 +3,44 @@
 {% block content %}
 <main class="app-shell" x-data="{ navigationOpen: false, navigationCollapsed: false }" :class="navigationCollapsed && 'app-shell--navigation-collapsed'">
   {% include "partials/sidebar.html" %}
-  <section class="workspace">
-    <header class="topbar"><button class="menu-button" type="button" @click="navigationOpen=true; navigationCollapsed=false" aria-label="Open navigation">☰</button><div><p class="kicker">Operations overview</p><h1>Welcome, Service Team</h1></div><span class="user-chip">SO</span></header>
-    <div class="hero"><div><span class="eyebrow">New workspace</span><h2>Start with data<br><em>from your organization</em></h2><p>The system will not automatically create sample machinery, manuals, parts, prices, or service history. Data appears only after a user adds or imports it.</p><a class="primary" href="/data">Upload data <span>→</span></a></div><div class="hero-graphic" aria-hidden="true">⚙<i>✦</i></div></div>
-    <div class="metric-grid"><article><span>Total machinery</span><strong>0</strong><small>No data yet</small></article><article><span>Cases in progress</span><strong>0</strong><small>No data yet</small></article><article><span>Knowledge documents</span><strong>{{ document_count }}</strong><small>{{ 'Awaiting upload' if document_count == 0 else 'Awaiting RAG indexing' }}</small></article><article><span>Answer feedback</span><strong>0</strong><small>Not enough data yet</small></article></div>
-    <section class="panel empty-state"><div class="empty-state__icon" aria-hidden="true">⇧</div><p class="kicker">No imported data</p><h3>Your workspace has no data yet</h3><p>Add your machinery, parts catalog, and knowledge documents before analyzing cases. The system will never substitute demonstration data for your real data.</p><a class="primary" href="/data">Go to upload <span>→</span></a></section>
-  </section><button class="scrim" x-show="navigationOpen" x-cloak @click="navigationOpen=false" aria-label="Close menu"></button>
+  <section class="workspace overview-page">
+    <header class="topbar refined-topbar">
+      <button class="menu-button" type="button" @click="navigationOpen=true; navigationCollapsed=false" aria-label="Open navigation">☰</button>
+      <div><p class="kicker">Operations overview</p><h1>Welcome, Service Team</h1></div>
+      <div class="page-status"><span class="status-dot"></span>Workspace ready</div>
+    </header>
+
+    <section class="overview-canvas" aria-labelledby="overview-title">
+      <div class="page-aura" aria-hidden="true"></div>
+      <div class="overview-hero">
+        <div class="overview-hero__copy">
+          <div class="section-label"><span class="section-label__icon">✦</span> Start with data you trust</div>
+          <h2 id="overview-title">Turn your service data into<br><em>clear, confident action.</em></h2>
+          <p>Build a trusted workspace from your own machinery, manuals, and service knowledge—then let every answer stay grounded in what your team knows.</p>
+          <div class="overview-actions"><a class="refined-primary" href="/data">Import your data <span>→</span></a><a class="text-link" href="/assistant">Open Service Assistant <span>↗</span></a></div>
+        </div>
+        <div class="overview-orbit" aria-hidden="true">
+          <span class="overview-orbit__ring"></span><span class="overview-orbit__core">SI</span>
+          <span class="overview-orbit__chip overview-orbit__chip--manual">▤ <small>Manuals</small></span>
+          <span class="overview-orbit__chip overview-orbit__chip--answer">✦ <small>Answers</small></span>
+          <span class="overview-orbit__chip overview-orbit__chip--machine">⌁ <small>Machines</small></span>
+        </div>
+      </div>
+
+      <div class="overview-metrics" aria-label="Workspace statistics">
+        <article><span class="metric-icon metric-icon--mint">⌁</span><div><small>Total machinery</small><strong>0</strong><p>No data yet</p></div></article>
+        <article><span class="metric-icon metric-icon--blue">◌</span><div><small>Cases in progress</small><strong>0</strong><p>No active cases</p></div></article>
+        <article><span class="metric-icon metric-icon--violet">▤</span><div><small>Knowledge documents</small><strong>{{ document_count }}</strong><p>{{ 'Awaiting upload' if document_count == 0 else 'Available to Service Assistant' }}</p></div></article>
+        <article><span class="metric-icon metric-icon--sand">✓</span><div><small>Answer feedback</small><strong>0</strong><p>Not enough data yet</p></div></article>
+      </div>
+
+      <section class="overview-empty">
+        <div class="overview-empty__icon" aria-hidden="true">↑</div>
+        <div><p class="kicker">Your knowledge base</p><h3>{{ 'Ready for your first import' if document_count == 0 else 'Your workspace is taking shape' }}</h3><p>Add product details, a clear image, and a technical manual. Service Assistant will use this verified knowledge to deliver more relevant guidance and citations.</p></div>
+        <a class="soft-action" href="/data">{{ 'Start importing' if document_count == 0 else 'Add more data' }} <span>→</span></a>
+      </section>
+    </section>
+  </section>
+  <button class="scrim" x-show="navigationOpen" x-cloak @click="navigationOpen=false" aria-label="Close menu"></button>
 </main>
 {% endblock %}
