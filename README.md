@@ -20,7 +20,8 @@ Service teams need fast, traceable guidance across manuals, repair cases, fault 
 - Transparent hybrid retrieval with document, section, page, and score citations
 - Decimal-safe repair estimates and editable preliminary quotation PDFs
 - Machine, knowledge-base, parts/pricing, history, feedback, and dashboard workflows
-- Deterministic `MOCK_AI=true` demo mode with no external AI cost
+- GPT-powered synthesis over retrieved evidence by default, with an explicit deterministic
+  `MOCK_AI=true` offline/test mode that does not call an external model
 
 See the phased scope and acceptance checks in [the implementation plan](docs/implementation-plan.md).
 
@@ -93,7 +94,13 @@ PostgreSQL is not used by the Phase 1 health skeleton. From Phase 2 onward, run 
 
 ## Environment variables
 
-Copy `.env.example` rather than committing `.env`. Important values are `DATABASE_URL`, `MOCK_AI`, server-only `OPENAI_API_KEY`, model names, CORS origins, upload limits, and retrieval tuning values.
+Copy `.env.example` rather than committing `.env`. Set the server-only `OPENAI_API_KEY` before
+using Service Assistant. With the default `MOCK_AI=false`, retrieved excerpts are supplied to
+`gpt-5-mini` as evidence and the model synthesizes the diagnosis; they are not returned directly.
+Set `MOCK_AI=true` only for offline development and automated tests, where the intentionally basic
+deterministic response displays retrieved excerpts and does not represent GPT answer quality.
+Other important values include `DATABASE_URL`, model names, CORS origins, upload limits, and
+retrieval tuning values.
 
 ## Data, seeding, and indexing
 
@@ -127,8 +134,9 @@ _Placeholder: dashboard, three-column Service Assistant, and preliminary quotati
   Production deployments should replace this with the planned SQLAlchemy and object-storage
   repositories.
 - Authentication, OpenAI embedding mode, OCR, and downloadable PDF rendering are not enabled in
-  this portfolio build. Set `MOCK_AI=false` and `OPENAI_API_KEY` to enable GPT response generation;
-  local retrieval remains deterministic.
+  this portfolio build. GPT response generation is the default and requires `OPENAI_API_KEY`;
+  local retrieval remains deterministic. Use `MOCK_AI=true` only when raw deterministic evidence
+  output is explicitly desired for offline development or tests.
 - Docker images are development-oriented and are not hardened production artifacts.
 
 ## Future improvements
