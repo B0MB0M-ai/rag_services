@@ -1,6 +1,29 @@
-<aside class="sidebar" :class="navigationOpen && 'sidebar--open'">
-  <div class="brand"><span class="brand__mark">S</span><div><strong>SERVICE<span>IQ</span></strong><small>Maintenance Intelligence</small></div></div>
-  <button class="sidebar__close" @click="navigationOpen=false" aria-label="Close menu">×</button>
-  <nav aria-label="Main menu"><small>WORKSPACE</small><a class="nav-item {{ 'nav-item--active' if active == 'dashboard' }}" href="/">▦ <span>Overview</span></a><a class="nav-item {{ 'nav-item--active' if active == 'assistant' }}" href="/assistant">✦ <span>Service Assistant</span></a><a class="nav-item" href="/assistant#estimate">▤ <span>Estimates</span></a><small>KNOWLEDGE</small><a class="nav-item {{ 'nav-item--active' if active == 'data' }}" href="/data">⇧ <span>Import Data</span></a><a class="nav-item" href="/api/v1/machines">⚙ <span>Machinery</span></a><a class="nav-item" href="/docs">▱ <span>Knowledge &amp; API</span></a><a class="nav-item" href="/api/v1/parts">◫ <span>Parts &amp; Pricing</span></a></nav>
+<aside class="sidebar" :class="navigationOpen && 'sidebar--open'" aria-label="Primary navigation">
+  <div class="sidebar__header">
+    <a class="brand" href="/" aria-label="ServiceIQ overview">
+      <span class="brand__mark">S</span>
+      <span class="brand__copy"><strong>SERVICE<span>IQ</span></strong><small>Maintenance Intelligence</small></span>
+    </a>
+    <button
+      class="sidebar__toggle"
+      type="button"
+      @click="navigationOpen = false; navigationCollapsed = !navigationCollapsed"
+      :aria-label="navigationCollapsed ? 'Open navigation' : 'Close navigation'"
+      :title="navigationCollapsed ? 'Open navigation' : 'Close navigation'"
+      :aria-expanded="(!navigationCollapsed).toString()"
+    ><span aria-hidden="true">‹</span></button>
+    <button class="sidebar__mobile-close" type="button" @click="navigationOpen=false" aria-label="Close navigation">×</button>
+  </div>
+
+  <nav aria-label="Main menu">
+    <small>WORKSPACE</small>
+    <a class="nav-item {{ 'nav-item--active' if active == 'dashboard' }}" href="/" title="Overview"><span class="nav-item__icon" aria-hidden="true">▦</span><span class="nav-item__label">Overview</span></a>
+    <a class="nav-item {{ 'nav-item--active' if active == 'assistant' }}" href="/assistant" title="Service Assistant"><span class="nav-item__icon" aria-hidden="true">✦</span><span class="nav-item__label">Service Assistant</span></a>
+
+    <small>KNOWLEDGE</small>
+    <a class="nav-item {{ 'nav-item--active' if active == 'data' }}" href="/data" title="Import Data"><span class="nav-item__icon" aria-hidden="true">⇧</span><span class="nav-item__label">Import Data</span></a>
+    <a class="nav-item {{ 'nav-item--active' if active == 'cases' }}" href="/cases" title="Case Information"><span class="nav-item__icon" aria-hidden="true">▱</span><span class="nav-item__label">Case Information</span></a>
+  </nav>
+
   <div class="sidebar__footer"><span class="status-dot"></span><strong>System operational</strong><small>Mock provider · No AI cost</small></div>
 </aside>

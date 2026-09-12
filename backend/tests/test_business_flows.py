@@ -113,6 +113,30 @@ def test_data_upload_page_and_document_api() -> None:
     assert client.get("/api/v1/documents").json()["meta"]["total"] == 1
 
 
+def test_navigation_contains_only_requested_destinations() -> None:
+    page = client.get("/")
+
+    assert page.status_code == 200
+    assert page.text.count('class="nav-item ') == 4
+    assert "Overview" in page.text
+    assert "Service Assistant" in page.text
+    assert "Import Data" in page.text
+    assert "Case Information" in page.text
+    assert ">Estimates<" not in page.text
+    assert ">Machinery<" not in page.text
+    assert ">Knowledge &amp; API<" not in page.text
+    assert ">Parts &amp; Pricing<" not in page.text
+    assert "navigationCollapsed" in page.text
+
+
+def test_case_information_page_marks_navigation_item_active() -> None:
+    page = client.get("/cases")
+
+    assert page.status_code == 200
+    assert "Case Information" in page.text
+    assert 'nav-item nav-item--active" href="/cases"' in page.text
+
+
 def test_product_upload_stores_image_and_manual_for_rag() -> None:
     from app.repositories.catalog import DOCUMENT_CONTENT, KNOWLEDGE_DOCUMENTS
 
@@ -133,10 +157,7 @@ def test_product_upload_stores_image_and_manual_for_rag() -> None:
         "manual",
         "product_image",
     ]
-    assert all(
-        document.product_name == "Hydraulic Pump HP-500"
-        for document in KNOWLEDGE_DOCUMENTS
-    )
+    assert all(document.product_name == "Hydraulic Pump HP-500" for document in KNOWLEDGE_DOCUMENTS)
 
 
 def test_product_upload_does_not_keep_incomplete_product_data() -> None:
