@@ -87,6 +87,9 @@ def test_catalog_and_assistant_page_are_available() -> None:
     assert "Analysis is not available yet" in page.text
     assert "How can we get your" in page.text
     assert "Hydraulic oil leak" in page.text
+    assert ':placeholder="typingPlaceholder"' in page.text
+    assert "animatePlaceholder" in page.text
+    assert "prefers-reduced-motion: reduce" in page.text
     assert 'action="/api/v1/chat"' not in page.text
     assert "fetch('/api/v1/chat'" in page.text
     assert "HP-500" not in page.text
