@@ -30,7 +30,13 @@ def _evidence() -> SimpleNamespace:
         ordinal=0,
         embedding=[1.0],
     )
-    return SimpleNamespace(chunk=chunk, document=document)
+    return SimpleNamespace(chunk=chunk, document=document, score=0.72)
+
+
+def test_gpt_generation_is_the_application_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("MOCK_AI")
+
+    assert Settings(_env_file=None).mock_ai is False
 
 
 def test_openai_generator_sends_retrieved_evidence_for_structured_generation() -> None:
@@ -57,6 +63,9 @@ def test_openai_generator_sends_retrieved_evidence_for_structured_generation() -
     assert "pump.pdf" in request["input"]
     assert "Inspect the suction filter" in request["input"]
     assert "E-PUMP-9" in request["input"]
+    assert 'relevance="0.7200"' in request["input"]
+    assert "not as text to copy" in request["instructions"]
+    assert "confirm or rule out" in request["instructions"]
     assert "prices" in request["instructions"]
     assert "test-key" not in str(request)
 

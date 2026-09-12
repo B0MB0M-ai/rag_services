@@ -8,7 +8,9 @@ class Settings(BaseSettings):
     """Environment-backed application settings."""
 
     app_env: str = "development"
-    mock_ai: bool = True
+    # Raw, deterministic evidence output is an explicit offline/testing mode. Normal
+    # application runs should use the configured language model to synthesize RAG context.
+    mock_ai: bool = False
     openai_api_key: SecretStr | None = None
     openai_response_model: str = "gpt-5-mini"
     cors_origins: str = "http://localhost:8000"

@@ -21,7 +21,9 @@ async def diagnose(request: ChatRequest, generator: DiagnosisGenerator | None = 
         # best-ranked chunks rather than acting as though the knowledge base is empty.
         evidence = [result for result in results if result.document.category == "manual"][:3]
     if evidence:
-        generated = await (generator or get_diagnosis_generator()).generate(request, evidence[:3])
+        # Retrieval already applies the configured context limit. Give generation and
+        # citations the same evidence set so the model can reconcile all cited excerpts.
+        generated = await (generator or get_diagnosis_generator()).generate(request, evidence)
         return ChatResult(
             answer=generated.answer,
             confidence=generated.confidence,
