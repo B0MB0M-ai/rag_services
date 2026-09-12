@@ -78,9 +78,7 @@ class KnowledgeDocument(BaseModel):
     product_name: str | None = None
     size_bytes: int = Field(ge=0)
     content_type: str
-    status: Literal["waiting_for_index", "indexing", "indexed", "failed"] = (
-        "waiting_for_index"
-    )
+    status: Literal["waiting_for_index", "indexing", "indexed", "failed"] = "waiting_for_index"
     chunk_count: int = Field(default=0, ge=0)
     indexing_error: str | None = None
     uploaded_at: datetime
@@ -102,3 +100,10 @@ class ChatResult(BaseModel):
     citations: list[Citation]
     suggested_part_ids: list[str]
     warning: str
+
+
+class GeneratedDiagnosis(BaseModel):
+    """Model-generated technical guidance before trusted citations are attached."""
+
+    answer: str = Field(min_length=1)
+    confidence: Literal["sufficient", "insufficient"]

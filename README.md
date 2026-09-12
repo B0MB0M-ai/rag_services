@@ -5,7 +5,7 @@
 An internal portfolio-demo application for industrial machinery service officers. The finished product will combine cited maintenance knowledge with authoritative SQL pricing to create preliminary diagnoses and repair estimates in Thai or English.
 
 > **Phase status:** Integrated portfolio demo. The application includes a polished dashboard,
-> service-assistant workflow, deterministic cited mock diagnosis, catalog APIs, and exact
+> service-assistant workflow, cited GPT generation with a deterministic offline mode, catalog APIs, and exact
 > server-side estimate calculation. PostgreSQL persistence, production authentication, document
 > durable PostgreSQL persistence, production authentication, and PDF rendering remain deployment
 > extensions described below.
@@ -126,8 +126,9 @@ _Placeholder: dashboard, three-column Service Assistant, and preliminary quotati
   an in-process repository; the complete local RAG flow works immediately but resets on restart.
   Production deployments should replace this with the planned SQLAlchemy and object-storage
   repositories.
-- Authentication, OpenAI generation/embedding mode, OCR, and downloadable PDF rendering are not
-  enabled in this portfolio build.
+- Authentication, OpenAI embedding mode, OCR, and downloadable PDF rendering are not enabled in
+  this portfolio build. Set `MOCK_AI=false` and `OPENAI_API_KEY` to enable GPT response generation;
+  local retrieval remains deterministic.
 - Docker images are development-oriented and are not hardened production artifacts.
 
 ## Future improvements

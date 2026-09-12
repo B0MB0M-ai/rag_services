@@ -7,8 +7,10 @@ product metadata; OCR is intentionally left to a future worker.
 
 At query time, normalized Thai/English text is compared using keyword overlap and cosine vector
 similarity. Product metadata can constrain retrieval, the two scores are merged and deduplicated,
-and only chunks above `RAG_MIN_EVIDENCE_SCORE` may reach answer generation. Answers quote the
-retrieved evidence and expose the document, section, page when available, and relevance score.
+and only chunks above `RAG_MIN_EVIDENCE_SCORE` may reach answer generation. With `MOCK_AI=true`,
+answers quote retrieved evidence deterministically. With `MOCK_AI=false`, the selected chunks and
+question are sent to the configured OpenAI Responses API model for grounded, structured synthesis.
+Both modes expose the document, section, page when available, and relevance score.
 Insufficient evidence produces escalation rather than fabrication. Candidate part identifiers are
 never inferred by the local generator; pricing remains an independent backend concern.
 
