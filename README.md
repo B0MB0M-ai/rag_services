@@ -56,6 +56,10 @@ docker compose up --build
 ```
 
 Open <http://localhost:8000>. API documentation is at <http://localhost:8000/docs>, and health is at <http://localhost:8000/api/v1/health>.
+The health response reports the instance's effective AI provider, active response model, readiness,
+and whether an API key is configured (but never exposes the key itself). This makes it possible to
+verify that a running instance is actually using `gpt-5-mini` rather than mock mode or an overridden
+model.
 
 ## Run without Docker
 

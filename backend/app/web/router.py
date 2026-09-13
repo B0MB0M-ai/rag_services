@@ -111,5 +111,11 @@ async def health_status(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(
         request=request,
         name="partials/health_status.html",
-        context={"environment": settings.app_env, "mock_ai": settings.mock_ai},
+        context={
+            "environment": settings.app_env,
+            "mock_ai": settings.mock_ai,
+            "ai_provider": "deterministic" if settings.mock_ai else "OpenAI",
+            "ai_model": None if settings.mock_ai else settings.openai_response_model,
+            "ai_ready": settings.mock_ai or settings.openai_api_key is not None,
+        },
     )

@@ -1,1 +1,1 @@
-<div class="health-result"><span class="status-dot"></span><strong>Backend operational</strong><span>Environment: {{ environment }} · Mock AI: {{ "on" if mock_ai else "off" }}</span></div>
+<div class="health-result"><span class="status-dot"></span><strong>Backend operational</strong><span>Environment: {{ environment }} · AI: {{ ai_provider }}{% if ai_model %} ({{ ai_model }}){% endif %} · {{ "ready" if ai_ready else "not ready — API key missing" }}</span></div>
