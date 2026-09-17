@@ -6,7 +6,11 @@ import pytest
 
 from app.core.config import Settings
 from app.schemas.domain import ChatRequest, DocumentChunk, GeneratedDiagnosis, KnowledgeDocument
-from app.services.generation import GenerationError, OpenAIDiagnosisGenerator
+from app.services.generation import (
+    DeterministicDiagnosisGenerator,
+    GenerationError,
+    OpenAIDiagnosisGenerator,
+)
 
 
 def _evidence() -> SimpleNamespace:
@@ -73,3 +77,18 @@ def test_openai_generator_sends_retrieved_evidence_for_structured_generation() -
 def test_openai_generator_requires_server_side_api_key() -> None:
     with pytest.raises(GenerationError, match="OPENAI_API_KEY"):
         OpenAIDiagnosisGenerator(Settings(mock_ai=False, openai_api_key=None))
+
+
+def test_mock_generator_never_presents_raw_evidence_as_ai_diagnosis() -> None:
+    evidence = _evidence()
+
+    result = asyncio.run(
+        DeterministicDiagnosisGenerator().generate(
+            ChatRequest(message="Pump มีการหยุดทำงาน"), [evidence]
+        )
+    )
+
+    assert result.confidence == "insufficient"
+    assert "offline mock mode" in result.answer
+    assert evidence.chunk.content not in result.answer
+    assert "MOCK_AI=false" in result.answer
