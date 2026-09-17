@@ -101,8 +101,10 @@ PostgreSQL is not used by the Phase 1 health skeleton. From Phase 2 onward, run 
 Copy `.env.example` rather than committing `.env`. Set the server-only `OPENAI_API_KEY` before
 using Service Assistant. With the default `MOCK_AI=false`, retrieved excerpts are supplied to
 `gpt-5-mini` as evidence and the model synthesizes the diagnosis; they are not returned directly.
-Set `MOCK_AI=true` only for offline development and automated tests, where the intentionally basic
-deterministic response displays retrieved excerpts and does not represent GPT answer quality.
+Set `MOCK_AI=true` only for offline development and automated tests. Offline mode deliberately does
+not display retrieved excerpts as if they were an AI diagnosis. It provides clearly labeled,
+general safety triage with insufficient confidence so operators do not mistake raw or corrupted PDF
+text for evidence-grounded repair guidance.
 Other important values include `DATABASE_URL`, model names, CORS origins, upload limits, and
 retrieval tuning values.
 

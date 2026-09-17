@@ -47,7 +47,7 @@
           <span class="assistant-composer__typing" x-show="!message" aria-hidden="true">
             <span x-text="typingPlaceholder"></span><i></i>
           </span>
-          <input id="service-question" x-ref="question" x-model="message" type="text" autocomplete="off" placeholder="e.g. The hydraulic pump has an oil leak and shows a fault code…" required>
+          <input id="service-question" x-ref="question" x-model="message" type="text" autocomplete="off" :placeholder="typingPlaceholder" required>
           <button type="submit" :disabled="loading" :aria-label="copy.sendLabel">
             <span x-show="!loading" aria-hidden="true">↑</span>
             <span x-show="loading" x-cloak aria-hidden="true">···</span>
@@ -56,7 +56,7 @@
 
         <div class="assistant-response" x-show="answer || error" x-cloak aria-live="polite">
           <p class="kicker" x-text="error ? copy.errorTitle : copy.guidanceTitle"></p>
-          <p x-text="error || answer"></p>
+          <p class="assistant-response__answer" x-text="error || answer"></p>
           <small x-show="citation" x-text="citation"></small>
         </div>
 

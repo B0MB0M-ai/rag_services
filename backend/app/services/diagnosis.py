@@ -23,19 +23,24 @@ async def diagnose(request: ChatRequest, generator: DiagnosisGenerator | None = 
     if evidence:
         # Retrieval already applies the configured context limit. Give generation and
         # citations the same evidence set so the model can reconcile all cited excerpts.
-        generated = await (generator or get_diagnosis_generator()).generate(request, evidence)
+        resolved_generator = generator or get_diagnosis_generator()
+        generated = await resolved_generator.generate(request, evidence)
         return ChatResult(
             answer=generated.answer,
             confidence=generated.confidence,
-            citations=[
-                Citation(
-                    document=result.document.filename,
-                    section=result.chunk.section,
-                    page=result.chunk.page,
-                    score=round(result.score, 4),
-                )
-                for result in evidence
-            ],
+            citations=(
+                [
+                    Citation(
+                        document=result.document.filename,
+                        section=result.chunk.section,
+                        page=result.chunk.page,
+                        score=round(result.score, 4),
+                    )
+                    for result in evidence
+                ]
+                if resolved_generator.uses_retrieved_evidence
+                else []
+            ),
             suggested_part_ids=[],
             warning=WARNING,
         )
