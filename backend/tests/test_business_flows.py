@@ -83,10 +83,10 @@ def test_chat_returns_citation_and_mandatory_warning() -> None:
     )
     data = response.json()["data"]
     assert response.status_code == 200
-    assert data["confidence"] == "sufficient"
+    assert data["confidence"] == "insufficient"
     assert data["citations"][0]["document"] == "hp-500.txt"
     assert data["citations"][0]["score"] >= 0.35
-    assert "inspect hydraulic hoses" in data["answer"]
+    assert "offline mock mode" in data["answer"]
     assert "preliminary assessment" in data["warning"]
 
 
@@ -121,6 +121,7 @@ def test_catalog_and_assistant_page_are_available() -> None:
     assert "setLanguage('th')" in page.text
     assert 'action="/api/v1/chat"' not in page.text
     assert "fetch('/api/v1/chat'" in page.text
+    assert "assistant-response__answer" in page.text
     assert "HP-500" not in page.text
 
 

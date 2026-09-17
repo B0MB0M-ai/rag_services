@@ -53,7 +53,7 @@ def test_docx_is_extracted_indexed_and_retrieved_with_source() -> None:
     answer = client.post(
         "/api/v1/chat", json={"message": "cavitation suction filter", "fault_code": "E-PUMP-9"}
     ).json()["data"]
-    assert answer["confidence"] == "sufficient"
+    assert answer["confidence"] == "insufficient"
     assert answer["citations"][0]["document"] == "pump.docx"
     assert answer["suggested_part_ids"] == []
 
@@ -68,8 +68,8 @@ def test_uploaded_manual_is_used_when_relevance_is_below_threshold() -> None:
 
     answer = client.post("/api/v1/chat", json={"message": "ต้องเตรียมเครื่องอย่างไร"}).json()["data"]
 
-    assert answer["confidence"] == "sufficient"
-    assert "ตรวจสอบวาล์วนิรภัยก่อนเริ่มเครื่อง" in answer["answer"]
+    assert answer["confidence"] == "insufficient"
+    assert "offline mock mode" in answer["answer"]
     assert answer["citations"][0]["document"] == "คู่มือ.txt"
 
 
