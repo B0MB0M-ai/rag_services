@@ -95,6 +95,7 @@
       message: '',
       messages: [],
       loading: false,
+      responseDeadlineMs: 4800,
       language: 'en',
       typingPlaceholder: '',
       typingTimer: null,
@@ -227,11 +228,14 @@
         this.addMessage('user', question);
         this.message = '';
         const requestCopy = this.copy;
+        const controller = new AbortController();
+        const deadline = window.setTimeout(() => controller.abort(), this.responseDeadlineMs);
         try {
           const response = await fetch('/api/v1/chat/stream', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: question })
+            body: JSON.stringify({ message: question }),
+            signal: controller.signal
           });
           if (!response.ok) throw new Error('Request failed');
           const reply = this.addMessage('assistant', '');
@@ -241,6 +245,7 @@
           if (reply?.role === 'assistant' && !reply.citation) reply.text = requestCopy.requestError;
           else this.addMessage('assistant', requestCopy.requestError);
         } finally {
+          window.clearTimeout(deadline);
           this.loading = false;
           this.scrollChat();
           this.$nextTick(() => this.$refs.question.focus());
