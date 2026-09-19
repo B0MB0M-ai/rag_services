@@ -33,7 +33,7 @@ root cause, rank the evidence-supported possibilities, and say exactly what the 
 observe at each check before proposing a corrective action. Put immediate electrical/mechanical
 safety and lockout/tagout actions before diagnostic work whenever the evidence supports them.
 
-Keep the complete answer concise (no more than 300 words) while producing a useful, synthesized
+Keep the complete answer concise (no more than 180 words) while producing a useful, synthesized
 response that:
 1. briefly interprets the reported symptom and gives a preliminary diagnosis;
 2. identifies likely causes supported by the evidence, clearly labeling any inference;
