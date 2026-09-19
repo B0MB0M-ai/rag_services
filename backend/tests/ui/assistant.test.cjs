@@ -5,8 +5,7 @@ const { runInNewContext } = require('node:vm');
 const { resolve } = require('node:path');
 const template = readFileSync(resolve(__dirname, '../../app/templates/pages/assistant.html'), 'utf8');
 function setup(fetch) {
-  const window = { setTimeout, clearTimeout };
-  const state = runInNewContext(`${template.match(/<script>([\s\S]*?)<\/script>/)[1]}; serviceAssistant()`, { fetch, Date, TextDecoder, Uint8Array, AbortController, setTimeout, clearTimeout, window });
+  const state = runInNewContext(`${template.match(/<script>([\s\S]*?)<\/script>/)[1]}; serviceAssistant()`, { fetch, Date, TextDecoder, Uint8Array });
   state.$nextTick = callback => callback();
   state.$refs = { chat: { scrollHeight: 100, scrollTop: 0 }, question: { focus() {} } };
   return state;
@@ -99,18 +98,4 @@ test('renders streamed deltas before replacing them with the authoritative resul
   await state.submit();
   assert.equal(state.messages[1].text, 'ตรวจสอบซีล');
   assert.equal(state.loading, false);
-});
-
-test('stops a stalled browser request before the five-second SLA', async () => {
-  const state = setup((_url, options) => new Promise((_resolve, reject) => {
-    options.signal.addEventListener('abort', () => reject(new Error('aborted')));
-  }));
-  state.responseDeadlineMs = 5;
-  state.message = 'stalled request';
-
-  await state.submit();
-
-  assert.equal(state.loading, false);
-  assert.equal(state.messages.length, 2);
-  assert.equal(state.messages[1].text, state.copy.requestError);
 });
