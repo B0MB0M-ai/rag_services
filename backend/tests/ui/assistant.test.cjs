@@ -99,3 +99,20 @@ test('renders streamed deltas before replacing them with the authoritative resul
   assert.equal(state.messages[1].text, 'ตรวจสอบซีล');
   assert.equal(state.loading, false);
 });
+
+test('replaces stored messages so Alpine reacts to streamed answer updates', () => {
+  const state = setup();
+  const replyId = state.addMessage('assistant', '');
+  const initiallyRenderedEntry = state.messages[0];
+
+  state.applyStreamEvent({ type: 'delta', text: 'ตรวจ' }, replyId, state.copy);
+
+  assert.notEqual(state.messages[0], initiallyRenderedEntry);
+  assert.equal(state.messages[0].text, 'ตรวจ');
+  const streamedEntry = state.messages[0];
+
+  state.applyStreamEvent({ type: 'done', data: { answer: 'ตรวจสอบซีล', citations: [] } }, replyId, state.copy);
+
+  assert.notEqual(state.messages[0], streamedEntry);
+  assert.equal(state.messages[0].text, 'ตรวจสอบซีล');
+});

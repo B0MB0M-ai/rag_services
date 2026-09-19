@@ -183,25 +183,36 @@
         const entry = { id: this.messages.length + 1, role, text, citation, timestamp: new Date().toISOString() };
         this.messages.push(entry);
         this.scrollChat();
-        return entry;
+        return entry.id;
       },
-      applyStreamEvent(event, reply, requestCopy) {
+      updateMessage(id, changes) {
+        const index = this.messages.findIndex(entry => entry.id === id);
+        if (index === -1) return null;
+        // Replace the array item so Alpine observes streamed changes. Mutating the
+        // raw object originally pushed into a reactive array can leave x-text stale.
+        this.messages[index] = { ...this.messages[index], ...changes };
+        this.scrollChat();
+        return this.messages[index];
+      },
+      applyStreamEvent(event, replyId, requestCopy) {
+        const reply = this.messages.find(entry => entry.id === replyId);
+        if (!reply) throw new Error('Assistant reply is unavailable');
         if (event.type === 'delta' && typeof event.text === 'string') {
-          reply.text += event.text;
-          this.scrollChat();
+          this.updateMessage(replyId, { text: reply.text + event.text });
           return false;
         }
         if (event.type === 'done' && typeof event.data?.answer === 'string') {
-          reply.text = event.data.answer;
           const source = event.data.citations?.[0];
-          reply.citation = source ? `${requestCopy.source}: ${source.document} · ${source.section}` : '';
-          this.scrollChat();
+          this.updateMessage(replyId, {
+            text: event.data.answer,
+            citation: source ? `${requestCopy.source}: ${source.document} · ${source.section}` : ''
+          });
           return true;
         }
         if (event.type === 'error') throw new Error(event.detail || 'Request failed');
         return false;
       },
-      async readStream(response, reply, requestCopy) {
+      async readStream(response, replyId, requestCopy) {
         if (!response.body?.getReader) throw new Error('Streaming response unavailable');
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
@@ -213,11 +224,11 @@
           const lines = buffer.split('\n');
           buffer = lines.pop() || '';
           for (const line of lines) {
-            if (line.trim()) completed = this.applyStreamEvent(JSON.parse(line), reply, requestCopy) || completed;
+            if (line.trim()) completed = this.applyStreamEvent(JSON.parse(line), replyId, requestCopy) || completed;
           }
           if (done) break;
         }
-        if (buffer.trim()) completed = this.applyStreamEvent(JSON.parse(buffer), reply, requestCopy) || completed;
+        if (buffer.trim()) completed = this.applyStreamEvent(JSON.parse(buffer), replyId, requestCopy) || completed;
         if (!completed) throw new Error('Stream ended before completion');
       },
       async submit() {
@@ -227,6 +238,7 @@
         this.addMessage('user', question);
         this.message = '';
         const requestCopy = this.copy;
+        let replyId = null;
         try {
           const response = await fetch('/api/v1/chat/stream', {
             method: 'POST',
@@ -234,11 +246,10 @@
             body: JSON.stringify({ message: question })
           });
           if (!response.ok) throw new Error('Request failed');
-          const reply = this.addMessage('assistant', '');
-          await this.readStream(response, reply, requestCopy);
+          replyId = this.addMessage('assistant', '');
+          await this.readStream(response, replyId, requestCopy);
         } catch (error) {
-          const reply = this.messages.at(-1);
-          if (reply?.role === 'assistant' && !reply.citation) reply.text = requestCopy.requestError;
+          if (replyId !== null) this.updateMessage(replyId, { text: requestCopy.requestError, citation: '' });
           else this.addMessage('assistant', requestCopy.requestError);
         } finally {
           this.loading = false;
