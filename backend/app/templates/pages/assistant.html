@@ -21,25 +21,43 @@
 
     <section
       class="assistant-welcome"
-      aria-labelledby="assistant-title"
+      :class="messages.length && 'assistant-welcome--chat'"
+      :aria-label="copy.chatLabel"
     >
       <div class="assistant-aura" aria-hidden="true"></div>
       <div class="assistant-welcome__content">
-        <div class="assistant-label">
-          <span class="assistant-label__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M12 3a4 4 0 0 0-3.86 5.05A4.5 4.5 0 0 0 8.5 17H10v2.25a2 2 0 0 0 4 0V17h1.5a4.5 4.5 0 0 0 .36-8.95A4 4 0 0 0 12 3Z"/><path d="M9 10.5h6M12 8v5"/></svg>
-          </span>
-          <span x-text="copy.label">Service intelligence</span>
+        <div x-show="!messages.length">
+          <div class="assistant-label">
+            <span class="assistant-label__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M12 3a4 4 0 0 0-3.86 5.05A4.5 4.5 0 0 0 8.5 17H10v2.25a2 2 0 0 0 4 0V17h1.5a4.5 4.5 0 0 0 .36-8.95A4 4 0 0 0 12 3Z"/><path d="M9 10.5h6M12 8v5"/></svg>
+            </span>
+            <span x-text="copy.label">Service intelligence</span>
+          </div>
+
+          <h2 id="assistant-title"><span x-text="copy.title">How can we get your</span><br><em x-text="copy.titleAccent">machine running?</em></h2>
+          <p class="assistant-lead" x-text="copy.lead">Describe the machine, symptoms, and any fault code you see. One clear sentence is enough to begin.</p>
+          <p class="assistant-trust" x-text="copy.trust">AI-assisted diagnosis · Evidence-backed guidance · Always verify before repair</p>
+
+          <div class="assistant-prompts" :aria-label="copy.exampleLabel">
+            <button type="button" @click="usePrompt(copy.prompts[0].message)"><span x-text="copy.prompts[0].label">Hydraulic oil leak</span> <span>↗</span></button>
+            <button type="button" @click="usePrompt(copy.prompts[1].message)"><span x-text="copy.prompts[1].label">Machine won’t start</span> <span>↗</span></button>
+            <button type="button" @click="usePrompt(copy.prompts[2].message)"><span x-text="copy.prompts[2].label">Unusual vibration</span> <span>↗</span></button>
+          </div>
+
         </div>
 
-        <h2 id="assistant-title"><span x-text="copy.title">How can we get your</span><br><em x-text="copy.titleAccent">machine running?</em></h2>
-        <p class="assistant-lead" x-text="copy.lead">Describe the machine, symptoms, and any fault code you see. One clear sentence is enough to begin.</p>
-        <p class="assistant-trust" x-text="copy.trust">AI-assisted diagnosis · Evidence-backed guidance · Always verify before repair</p>
-
-        <div class="assistant-prompts" :aria-label="copy.exampleLabel">
-          <button type="button" @click="usePrompt(copy.prompts[0].message)"><span x-text="copy.prompts[0].label">Hydraulic oil leak</span> <span>↗</span></button>
-          <button type="button" @click="usePrompt(copy.prompts[1].message)"><span x-text="copy.prompts[1].label">Machine won’t start</span> <span>↗</span></button>
-          <button type="button" @click="usePrompt(copy.prompts[2].message)"><span x-text="copy.prompts[2].label">Unusual vibration</span> <span>↗</span></button>
+        <div class="assistant-chat" x-show="messages.length" x-cloak x-ref="chat" role="log" :aria-label="copy.chatLabel" aria-live="polite">
+          <template x-for="entry in messages" :key="entry.id">
+            <article class="assistant-chat__message" :class="entry.role === 'user' ? 'assistant-chat__message--user' : 'assistant-chat__message--system'">
+              <div class="assistant-chat__meta">
+                <strong x-text="entry.role === 'user' ? copy.you : copy.assistant"></strong>
+                <time :datetime="entry.timestamp" :title="entry.timestamp" x-text="formatTimestamp(entry.timestamp)"></time>
+              </div>
+              <p class="assistant-response__answer" x-text="entry.text"></p>
+              <small x-show="entry.citation" x-text="entry.citation"></small>
+            </article>
+          </template>
+          <p class="assistant-chat__pending" x-show="loading" role="status" x-text="copy.thinking"></p>
         </div>
 
         <form class="assistant-composer" @submit.prevent="submit" :class="loading && 'assistant-composer--loading'">
@@ -54,20 +72,14 @@
           </button>
         </form>
 
-        <div class="assistant-response" x-show="answer || error" x-cloak aria-live="polite">
-          <p class="kicker" x-text="error ? copy.errorTitle : copy.guidanceTitle"></p>
-          <p class="assistant-response__answer" x-text="error || answer"></p>
-          <small x-show="citation" x-text="citation"></small>
-        </div>
-
-        <div class="assistant-steps" :aria-label="copy.stepsLabel">
+        <div x-show="!messages.length" class="assistant-steps" :aria-label="copy.stepsLabel">
           <article><span>01</span><h3 x-text="copy.steps[0].title">Describe the issue</h3><p x-text="copy.steps[0].description">Share the model, symptoms, and fault code if available.</p></article>
           <article><span>02</span><h3 x-text="copy.steps[1].title">Review cited guidance</h3><p x-text="copy.steps[1].description">We connect your question to imported service knowledge.</p></article>
           <article><span>03</span><h3 x-text="copy.steps[2].title">Confirm before action</h3><p x-text="copy.steps[2].description">A qualified technician reviews safety steps and next actions.</p></article>
         </div>
       </div>
 
-      <aside class="assistant-data-note">
+      <aside x-show="!messages.length" class="assistant-data-note">
         <span aria-hidden="true">i</span>
         <p><strong x-text="copy.dataTitle">Analysis is not available yet for unimported products.</strong> <span x-text="copy.dataDescription">Add manuals and product data to improve answers, citations, and parts guidance.</span></p>
         <a href="/data" x-text="copy.importData">Import data →</a>
@@ -81,15 +93,14 @@
   function serviceAssistant() {
     return {
       message: '',
-      answer: '',
-      citation: '',
-      error: '',
+      messages: [],
       loading: false,
       language: 'en',
       typingPlaceholder: '',
       typingTimer: null,
       translations: {
         en: {
+          chatLabel: 'Service conversation', you: 'You', assistant: 'Service Assistant', thinking: 'Preparing your answer…',
           status: 'AI-assisted · technician reviewed', label: 'Service intelligence', title: 'How can we get your', titleAccent: 'machine running?',
           lead: 'Describe the machine, symptoms, and any fault code you see. One clear sentence is enough to begin.', trust: 'AI-assisted diagnosis · Evidence-backed guidance · Always verify before repair',
           exampleLabel: 'Example questions', inputLabel: 'Describe the service issue', sendLabel: 'Send service question', guidanceTitle: 'Preliminary guidance', errorTitle: 'Unable to analyse',
@@ -99,6 +110,7 @@
           dataTitle: 'Analysis is not available yet for unimported products.', dataDescription: 'Add manuals and product data to improve answers, citations, and parts guidance.', importData: 'Import data →', requestError: 'Please try again, or import product knowledge before continuing.', source: 'Source'
         },
         th: {
+          chatLabel: 'บทสนทนางานบริการ', you: 'คุณ', assistant: 'ระบบช่วยงานบริการ', thinking: 'กำลังเตรียมคำตอบ…',
           status: 'ช่วยด้วย AI · ตรวจสอบโดยช่างเทคนิค', label: 'ระบบช่วยงานบริการ', title: 'เราจะช่วยให้เครื่องจักรของคุณ', titleAccent: 'กลับมาทำงานได้อย่างไร?',
           lead: 'อธิบายเครื่องจักร อาการ และรหัสข้อผิดพลาดที่พบ เพียงหนึ่งประโยคก็เริ่มต้นได้', trust: 'วิเคราะห์ด้วย AI · คำแนะนำมีแหล่งอ้างอิง · ตรวจสอบก่อนซ่อมทุกครั้ง',
           exampleLabel: 'ตัวอย่างคำถาม', inputLabel: 'อธิบายปัญหาการบริการ', sendLabel: 'ส่งคำถามการบริการ', guidanceTitle: 'คำแนะนำเบื้องต้น', errorTitle: 'ไม่สามารถวิเคราะห์ได้',
@@ -152,26 +164,45 @@
         this.message = prompt;
         this.$nextTick(() => this.$refs.question.focus());
       },
+      formatTimestamp(timestamp) {
+        // Requested display omits hours; the time element retains the complete UTC ISO value.
+        const iso = timestamp;
+        return `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}/ ${iso.slice(14)}`;
+      },
+      scrollChat() {
+        this.$nextTick(() => {
+          this.$refs.chat.scrollTop = this.$refs.chat.scrollHeight;
+        });
+      },
+      addMessage(role, text, citation = '') {
+        this.messages.push({ id: this.messages.length + 1, role, text, citation, timestamp: new Date().toISOString() });
+        this.scrollChat();
+      },
       async submit() {
+        const question = this.message.trim();
+        if (this.loading || !question) return;
         this.loading = true;
-        this.answer = '';
-        this.citation = '';
-        this.error = '';
+        this.addMessage('user', question);
+        this.message = '';
+        const requestCopy = this.copy;
         try {
           const response = await fetch('/api/v1/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: this.message })
+            body: JSON.stringify({ message: question })
           });
           if (!response.ok) throw new Error('Request failed');
           const payload = await response.json();
-          this.answer = payload.data.answer;
-          const source = payload.data.citations[0];
-          this.citation = source ? `${this.copy.source}: ${source.document} · ${source.section}` : '';
+          if (typeof payload.data?.answer !== 'string') throw new Error('Invalid answer');
+          const source = payload.data.citations?.[0];
+          const citation = source ? `${requestCopy.source}: ${source.document} · ${source.section}` : '';
+          this.addMessage('assistant', payload.data.answer, citation);
         } catch (error) {
-          this.error = this.copy.requestError;
+          this.addMessage('assistant', requestCopy.requestError);
         } finally {
           this.loading = false;
+          this.scrollChat();
+          this.$nextTick(() => this.$refs.question.focus());
         }
       }
     };
