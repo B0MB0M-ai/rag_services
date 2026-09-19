@@ -72,11 +72,7 @@ def test_openai_generator_sends_retrieved_evidence_for_structured_generation() -
     request = parse.await_args.kwargs
     assert request["model"] == "gpt-5-mini"
     assert request["text_format"] is GeneratedDiagnosis
-<<<<<<< HEAD
     assert request["max_output_tokens"] == 4000
-=======
-    assert request["max_output_tokens"] == 500
->>>>>>> af2ef1a53b031dbccd51e62486ade5395a217ec5
     assert request["text"] == {"verbosity": "low"}
     assert "pump.pdf" in request["input"]
     assert "Inspect the suction filter" in request["input"]

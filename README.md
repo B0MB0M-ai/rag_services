@@ -101,18 +101,13 @@ PostgreSQL is not used by the Phase 1 health skeleton. From Phase 2 onward, run 
 Copy `.env.example` rather than committing `.env`. Set the server-only `OPENAI_API_KEY` before
 using Service Assistant. With the default `MOCK_AI=false`, retrieved excerpts are supplied to
 `gpt-5-mini` as evidence and the model synthesizes the diagnosis; they are not returned directly.
-<<<<<<< HEAD
 `OPENAI_MAX_OUTPUT_TOKENS` limits diagnosis length (default `4000`). This budget includes model
 reasoning and structured-output formatting as well as visible answer text. The Service Assistant
-uses the streaming chat endpoint so answer text appears while generation is still in progress.
-=======
-`OPENAI_MAX_OUTPUT_TOKENS` limits diagnosis length (default `500`). The Service Assistant uses the
-streaming chat endpoint so answer text appears while generation is still in progress. A
+uses the streaming chat endpoint so answer text appears while generation is still in progress. A
 four-second server-side response budget and 4.8-second browser deadline keep the user-facing
 response below five seconds; if generation misses the budget, the assistant returns a safe,
 insufficient-confidence fallback instead of waiting indefinitely. Configure the server budget with
 `ASSISTANT_RESPONSE_TIMEOUT_SECONDS` while leaving margin for network and browser rendering.
->>>>>>> af2ef1a53b031dbccd51e62486ade5395a217ec5
 Set `MOCK_AI=true` only for offline development and automated tests. Offline mode deliberately does
 not display retrieved excerpts as if they were an AI diagnosis; it returns an insufficient-result
 configuration notice so operators cannot mistake raw or corrupted PDF text for repair guidance.
