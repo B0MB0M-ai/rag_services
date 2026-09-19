@@ -10,6 +10,8 @@ from app.services.generation import (
     DeterministicDiagnosisGenerator,
     GenerationError,
     OpenAIDiagnosisGenerator,
+    _AnswerJSONStreamDecoder,
+    get_diagnosis_generator,
 )
 
 
@@ -43,6 +45,10 @@ def test_gpt_generation_is_the_application_default(monkeypatch: pytest.MonkeyPat
     assert Settings(_env_file=None).mock_ai is False
 
 
+def test_default_generator_is_reused_between_requests() -> None:
+    assert get_diagnosis_generator() is get_diagnosis_generator()
+
+
 def test_openai_generator_sends_retrieved_evidence_for_structured_generation() -> None:
     parsed = GeneratedDiagnosis(
         answer="ตรวจสอบไส้กรองทางดูดก่อน แล้วให้ช่างยืนยันผล", confidence="sufficient"
@@ -64,6 +70,8 @@ def test_openai_generator_sends_retrieved_evidence_for_structured_generation() -
     request = parse.await_args.kwargs
     assert request["model"] == "gpt-5-mini"
     assert request["text_format"] is GeneratedDiagnosis
+    assert request["max_output_tokens"] == 800
+    assert request["text"] == {"verbosity": "low"}
     assert "pump.pdf" in request["input"]
     assert "Inspect the suction filter" in request["input"]
     assert "E-PUMP-9" in request["input"]
@@ -92,3 +100,12 @@ def test_mock_generator_never_presents_raw_evidence_as_ai_diagnosis() -> None:
     assert "offline mock mode" in result.answer
     assert evidence.chunk.content not in result.answer
     assert "MOCK_AI=false" in result.answer
+
+
+def test_structured_answer_decoder_handles_split_json_and_escapes() -> None:
+    decoder = _AnswerJSONStreamDecoder()
+
+    assert decoder.feed('{"ans') == ""
+    assert decoder.feed('wer":"ตรวจ\\n') == "ตรวจ\n"
+    assert decoder.feed("สอบ") == "สอบ"
+    assert decoder.feed('","confidence":"sufficient"}') == ""

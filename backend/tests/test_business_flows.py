@@ -120,9 +120,25 @@ def test_catalog_and_assistant_page_are_available() -> None:
     assert "เราจะช่วยให้เครื่องจักรของคุณ" in page.text
     assert "setLanguage('th')" in page.text
     assert 'action="/api/v1/chat"' not in page.text
-    assert "fetch('/api/v1/chat'" in page.text
+    assert "fetch('/api/v1/chat/stream'" in page.text
     assert "assistant-response__answer" in page.text
     assert "HP-500" not in page.text
+
+
+def test_chat_stream_sends_deltas_before_the_completed_result() -> None:
+    from app.repositories.catalog import DOCUMENT_CHUNKS, DOCUMENT_CONTENT, KNOWLEDGE_DOCUMENTS
+
+    KNOWLEDGE_DOCUMENTS.clear()
+    DOCUMENT_CONTENT.clear()
+    DOCUMENT_CHUNKS.clear()
+    response = client.post("/api/v1/chat/stream", json={"message": "unknown symptom"})
+    events = [__import__("json").loads(line) for line in response.text.splitlines()]
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("application/x-ndjson")
+    assert events[0]["type"] == "delta"
+    assert events[-1]["type"] == "done"
+    assert events[-1]["data"]["answer"] == events[0]["text"]
 
 
 def test_data_upload_page_and_document_api() -> None:

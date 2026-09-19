@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import json
 import logging
+import re
+from collections.abc import AsyncIterator
+from functools import lru_cache
 from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
@@ -27,7 +31,8 @@ root cause, rank the evidence-supported possibilities, and say exactly what the 
 observe at each check before proposing a corrective action. Put immediate electrical/mechanical
 safety and lockout/tagout actions before diagnostic work whenever the evidence supports them.
 
-Produce a useful, synthesized response that:
+Keep the complete answer concise (no more than 300 words) while producing a useful, synthesized
+response that:
 1. briefly interprets the reported symptom and gives a preliminary diagnosis;
 2. identifies likely causes supported by the evidence, clearly labeling any inference;
 3. gives safe, actionable checks in priority order, including stop-work conditions when supported;
@@ -54,12 +59,32 @@ class DiagnosisGenerator(Protocol):
         self, request: ChatRequest, evidence: list[RetrievalResult]
     ) -> GeneratedDiagnosis: ...
 
+    def stream(
+        self, request: ChatRequest, evidence: list[RetrievalResult]
+    ) -> AsyncIterator[str | GeneratedDiagnosis]: ...
+
 
 class DeterministicDiagnosisGenerator:
     async def generate(
         self, request: ChatRequest, evidence: list[RetrievalResult]
     ) -> GeneratedDiagnosis:
         del request, evidence
+        return self._diagnosis()
+
+    def stream(
+        self, request: ChatRequest, evidence: list[RetrievalResult]
+    ) -> AsyncIterator[str | GeneratedDiagnosis]:
+        del request, evidence
+
+        async def events() -> AsyncIterator[str | GeneratedDiagnosis]:
+            diagnosis = self._diagnosis()
+            yield diagnosis.answer
+            yield diagnosis
+
+        return events()
+
+    @staticmethod
+    def _diagnosis() -> GeneratedDiagnosis:
         return GeneratedDiagnosis(
             answer=(
                 "AI diagnosis is unavailable because the application is running in offline mock "
@@ -77,6 +102,7 @@ class OpenAIDiagnosisGenerator:
         if settings.openai_api_key is None:
             raise GenerationError("OPENAI_API_KEY is required when MOCK_AI=false")
         self._model = settings.openai_response_model
+        self._max_output_tokens = settings.openai_max_output_tokens
         if client is None:
             from openai import AsyncOpenAI, OpenAIError
 
@@ -89,6 +115,59 @@ class OpenAIDiagnosisGenerator:
     async def generate(
         self, request: ChatRequest, evidence: list[RetrievalResult]
     ) -> GeneratedDiagnosis:
+        user_input = self._build_user_input(request, evidence)
+        try:
+            response = await self._client.responses.parse(
+                model=self._model,
+                instructions=SYSTEM_INSTRUCTIONS,
+                input=user_input,
+                text_format=GeneratedDiagnosis,
+                max_output_tokens=self._max_output_tokens,
+                text={"verbosity": "low"},
+            )
+        except self._api_error as error:
+            logger.exception("OpenAI diagnosis generation failed")
+            raise GenerationError("AI diagnosis generation is temporarily unavailable") from error
+        if response.output_parsed is None:
+            raise GenerationError("AI diagnosis generation returned no structured result")
+        return response.output_parsed
+
+    def stream(
+        self, request: ChatRequest, evidence: list[RetrievalResult]
+    ) -> AsyncIterator[str | GeneratedDiagnosis]:
+        user_input = self._build_user_input(request, evidence)
+
+        async def events() -> AsyncIterator[str | GeneratedDiagnosis]:
+            decoder = _AnswerJSONStreamDecoder()
+            parsed: GeneratedDiagnosis | None = None
+            try:
+                async with self._client.responses.stream(
+                    model=self._model,
+                    instructions=SYSTEM_INSTRUCTIONS,
+                    input=user_input,
+                    text_format=GeneratedDiagnosis,
+                    max_output_tokens=self._max_output_tokens,
+                    text={"verbosity": "low"},
+                ) as stream:
+                    async for event in stream:
+                        if event.type == "response.output_text.delta":
+                            if text := decoder.feed(event.delta):
+                                yield text
+                        elif event.type == "response.output_text.done":
+                            parsed = event.parsed
+            except self._api_error as error:
+                logger.exception("OpenAI diagnosis streaming failed")
+                raise GenerationError(
+                    "AI diagnosis generation is temporarily unavailable"
+                ) from error
+            if parsed is None:
+                raise GenerationError("AI diagnosis generation returned no structured result")
+            yield parsed
+
+        return events()
+
+    @staticmethod
+    def _build_user_input(request: ChatRequest, evidence: list[RetrievalResult]) -> str:
         evidence_text = "\n\n".join(
             f'<evidence id="{index}" relevance="{result.score:.4f}">\n'
             f"Document: {result.document.filename}\n"
@@ -98,7 +177,7 @@ class OpenAIDiagnosisGenerator:
             "</evidence>"
             for index, result in enumerate(evidence, start=1)
         )
-        user_input = (
+        return (
             "<service_request>\n"
             f"Question: {request.message}\n"
             f"Machine identifier: {request.machine_id or 'not provided'}\n"
@@ -106,23 +185,69 @@ class OpenAIDiagnosisGenerator:
             "</service_request>\n\n"
             f"<retrieved_context>\n{evidence_text}\n</retrieved_context>"
         )
+
+
+class _AnswerJSONStreamDecoder:
+    """Extract incremental text from the `answer` string in structured JSON output."""
+
+    _answer_start = re.compile(r'"answer"\s*:\s*"')
+
+    def __init__(self) -> None:
+        self._prefix = ""
+        self._encoded = ""
+        self._decoded = ""
+        self._in_answer = False
+        self._escaped = False
+        self._complete = False
+
+    def feed(self, fragment: str) -> str:
+        if self._complete:
+            return ""
+        if not self._in_answer:
+            self._prefix += fragment
+            match = self._answer_start.search(self._prefix)
+            if match is None:
+                self._prefix = self._prefix[-64:]
+                return ""
+            fragment = self._prefix[match.end() :]
+            self._prefix = ""
+            self._in_answer = True
+
+        for character in fragment:
+            if not self._escaped and character == '"':
+                self._complete = True
+                break
+            self._encoded += character
+            if self._escaped:
+                self._escaped = False
+            elif character == "\\":
+                self._escaped = True
+
         try:
-            response = await self._client.responses.parse(
-                model=self._model,
-                instructions=SYSTEM_INSTRUCTIONS,
-                input=user_input,
-                text_format=GeneratedDiagnosis,
-            )
-        except self._api_error as error:
-            logger.exception("OpenAI diagnosis generation failed")
-            raise GenerationError("AI diagnosis generation is temporarily unavailable") from error
-        if response.output_parsed is None:
-            raise GenerationError("AI diagnosis generation returned no structured result")
-        return response.output_parsed
+            decoded = json.loads(f'"{self._encoded}"')
+        except (ValueError, UnicodeDecodeError):
+            return ""
+        if decoded and 0xD800 <= ord(decoded[-1]) <= 0xDBFF:
+            decoded = decoded[:-1]
+        delta = decoded[len(self._decoded) :]
+        self._decoded = decoded
+        return delta
 
 
-def get_diagnosis_generator(settings: Settings | None = None) -> DiagnosisGenerator:
-    resolved_settings = settings or get_settings()
+def _build_diagnosis_generator(settings: Settings) -> DiagnosisGenerator:
+    resolved_settings = settings
     if resolved_settings.mock_ai:
         return DeterministicDiagnosisGenerator()
     return OpenAIDiagnosisGenerator(resolved_settings)
+
+
+@lru_cache(maxsize=1)
+def _get_default_diagnosis_generator() -> DiagnosisGenerator:
+    return _build_diagnosis_generator(get_settings())
+
+
+def get_diagnosis_generator(settings: Settings | None = None) -> DiagnosisGenerator:
+    """Reuse the default OpenAI client and its HTTP connection pool across requests."""
+    if settings is not None:
+        return _build_diagnosis_generator(settings)
+    return _get_default_diagnosis_generator()

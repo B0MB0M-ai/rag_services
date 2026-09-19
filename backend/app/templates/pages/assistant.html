@@ -180,8 +180,45 @@
         });
       },
       addMessage(role, text, citation = '') {
-        this.messages.push({ id: this.messages.length + 1, role, text, citation, timestamp: new Date().toISOString() });
+        const entry = { id: this.messages.length + 1, role, text, citation, timestamp: new Date().toISOString() };
+        this.messages.push(entry);
         this.scrollChat();
+        return entry;
+      },
+      applyStreamEvent(event, reply, requestCopy) {
+        if (event.type === 'delta' && typeof event.text === 'string') {
+          reply.text += event.text;
+          this.scrollChat();
+          return false;
+        }
+        if (event.type === 'done' && typeof event.data?.answer === 'string') {
+          reply.text = event.data.answer;
+          const source = event.data.citations?.[0];
+          reply.citation = source ? `${requestCopy.source}: ${source.document} · ${source.section}` : '';
+          this.scrollChat();
+          return true;
+        }
+        if (event.type === 'error') throw new Error(event.detail || 'Request failed');
+        return false;
+      },
+      async readStream(response, reply, requestCopy) {
+        if (!response.body?.getReader) throw new Error('Streaming response unavailable');
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let completed = false;
+        while (true) {
+          const { value, done } = await reader.read();
+          buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+          for (const line of lines) {
+            if (line.trim()) completed = this.applyStreamEvent(JSON.parse(line), reply, requestCopy) || completed;
+          }
+          if (done) break;
+        }
+        if (buffer.trim()) completed = this.applyStreamEvent(JSON.parse(buffer), reply, requestCopy) || completed;
+        if (!completed) throw new Error('Stream ended before completion');
       },
       async submit() {
         const question = this.message.trim();
@@ -191,19 +228,18 @@
         this.message = '';
         const requestCopy = this.copy;
         try {
-          const response = await fetch('/api/v1/chat', {
+          const response = await fetch('/api/v1/chat/stream', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message: question })
           });
           if (!response.ok) throw new Error('Request failed');
-          const payload = await response.json();
-          if (typeof payload.data?.answer !== 'string') throw new Error('Invalid answer');
-          const source = payload.data.citations?.[0];
-          const citation = source ? `${requestCopy.source}: ${source.document} · ${source.section}` : '';
-          this.addMessage('assistant', payload.data.answer, citation);
+          const reply = this.addMessage('assistant', '');
+          await this.readStream(response, reply, requestCopy);
         } catch (error) {
-          this.addMessage('assistant', requestCopy.requestError);
+          const reply = this.messages.at(-1);
+          if (reply?.role === 'assistant' && !reply.citation) reply.text = requestCopy.requestError;
+          else this.addMessage('assistant', requestCopy.requestError);
         } finally {
           this.loading = false;
           this.scrollChat();
