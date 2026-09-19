@@ -117,6 +117,10 @@ def test_catalog_and_assistant_page_are_available() -> None:
     assert "language: 'en'" in page.text
     assert "Use English" in page.text
     assert "ใช้ภาษาไทย" in page.text
+    assert "🇬🇧" not in page.text
+    assert "🇹🇭" not in page.text
+    assert "FIXO" in page.text
+    assert "SERVICEIQ" not in page.text
     assert "เราจะช่วยให้เครื่องจักรของคุณ" in page.text
     assert "setLanguage('th')" in page.text
     assert 'action="/api/v1/chat"' not in page.text
