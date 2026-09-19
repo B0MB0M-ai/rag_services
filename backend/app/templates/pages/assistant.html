@@ -51,7 +51,7 @@
             <article class="assistant-chat__message" :class="entry.role === 'user' ? 'assistant-chat__message--user' : 'assistant-chat__message--system'">
               <div class="assistant-chat__meta">
                 <strong x-text="entry.role === 'user' ? copy.you : copy.assistant"></strong>
-                <time :datetime="entry.timestamp" :title="entry.timestamp" x-text="formatTimestamp(entry.timestamp)"></time>
+                <time :datetime="entry.timestamp" :title="formatTimestamp(entry.timestamp) + ' (UTC+07:00)'" x-text="formatTimestamp(entry.timestamp)"></time>
               </div>
               <p class="assistant-response__answer" x-text="entry.text"></p>
               <small x-show="entry.citation" x-text="entry.citation"></small>
@@ -165,9 +165,14 @@
         this.$nextTick(() => this.$refs.question.focus());
       },
       formatTimestamp(timestamp) {
-        // Requested display omits hours; the time element retains the complete UTC ISO value.
-        const iso = timestamp;
-        return `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}/ ${iso.slice(14)}`;
+        // Keep the ISO instant intact; display Thailand time regardless of browser locale.
+        const parts = new Intl.DateTimeFormat('en-GB', {
+          timeZone: 'Asia/Bangkok', calendar: 'gregory', numberingSystem: 'latn',
+          day: '2-digit', month: '2-digit', year: 'numeric',
+          hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23'
+        }).formatToParts(new Date(timestamp));
+        const values = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
+        return `${values.day}/${values.month}/${values.year}/ ${values.hour}:${values.minute}:${values.second}`;
       },
       scrollChat() {
         this.$nextTick(() => {

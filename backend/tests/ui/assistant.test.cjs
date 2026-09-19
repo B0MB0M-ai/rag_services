@@ -38,9 +38,20 @@ test('switches immediately, blocks duplicate sends, preserves draft and conversa
   assert.equal(state.messages.length, 4);
   assert.equal(state.messages[0].timestamp, sent);
 });
-test('formats UTC date and milliseconds exactly as requested', () => {
+test('formats Thailand time with Gregorian dates and seconds in both languages', () => {
   const state = setup();
-  assert.equal(state.formatTimestamp('2026-01-02T13:04:05.006Z'), '02/01/2026/ 04:05.006Z');
+  for (const language of ['en', 'th']) {
+    state.language = language;
+    for (const [timestamp, expected] of [
+      ['2026-01-02T13:04:05.006Z', '02/01/2026/ 20:04:05'],
+      ['2026-12-31T17:00:00.999Z', '01/01/2027/ 00:00:00'],
+      ['2026-01-31T18:02:03Z', '01/02/2026/ 01:02:03'],
+      ['2024-02-28T17:00:00Z', '29/02/2024/ 00:00:00'],
+      ['2026-07-02T13:04:05Z', '02/07/2026/ 20:04:05']
+    ]) {
+      assert.equal(state.formatTimestamp(timestamp), expected);
+    }
+  }
 });
 test('rejects whitespace and recovers after failed requests with a timestamped reply', async () => {
   const state = setup(async () => { throw new Error('offline'); });
