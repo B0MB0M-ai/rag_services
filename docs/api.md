@@ -6,3 +6,7 @@ its status and `POST /api/v1/documents/{document_id}/index` retries indexing. `P
 retrieves indexed evidence and returns a typed answer with confidence, citations, candidate part IDs,
 and the mandatory preliminary-assessment warning. Catalog and deterministic estimate endpoints use
 consistent typed response envelopes.
+
+`POST /api/v1/chat/stream` accepts the same request and returns newline-delimited JSON. `delta`
+events contain incremental answer text and the final `done` event contains the complete typed chat
+result. Completed conversations are persisted after the response finishes.

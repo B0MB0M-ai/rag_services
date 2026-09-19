@@ -54,9 +54,7 @@ def persist_documents() -> None:
             data_directory / "knowledge.json",
             {
                 "version": 1,
-                "documents": [
-                    document.model_dump(mode="json") for document in KNOWLEDGE_DOCUMENTS
-                ],
+                "documents": [document.model_dump(mode="json") for document in KNOWLEDGE_DOCUMENTS],
                 "chunks": {
                     document_id: [chunk.model_dump(mode="json") for chunk in chunks]
                     for document_id, chunks in DOCUMENT_CHUNKS.items()
@@ -73,6 +71,19 @@ def persist_service_cases() -> None:
             {
                 "version": 1,
                 "cases": [service_case.model_dump(mode="json") for service_case in SERVICE_CASES],
+            },
+        )
+
+
+def save_service_case(service_case: ServiceCase) -> None:
+    """Append and persist one case atomically; safe to call from a background thread."""
+    with _storage_lock:
+        SERVICE_CASES.insert(0, service_case)
+        _write_json(
+            get_settings().app_data_dir / "service_cases.json",
+            {
+                "version": 1,
+                "cases": [item.model_dump(mode="json") for item in SERVICE_CASES],
             },
         )
 
@@ -111,8 +122,7 @@ def load_persistent_state() -> None:
                     KNOWLEDGE_DOCUMENTS.append(document)
                     DOCUMENT_CONTENT[document.id] = blob_path.read_bytes()
                     DOCUMENT_CHUNKS[document.id] = [
-                        DocumentChunk.model_validate(chunk)
-                        for chunk in chunks.get(document.id, [])
+                        DocumentChunk.model_validate(chunk) for chunk in chunks.get(document.id, [])
                     ]
             except (OSError, ValueError, TypeError, json.JSONDecodeError):
                 logger.exception("Unable to restore persisted knowledge data")
