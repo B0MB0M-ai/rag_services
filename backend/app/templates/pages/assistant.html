@@ -12,8 +12,8 @@
       </div>
       <div class="assistant-topbar__actions">
         <div class="language-switcher" role="group" aria-label="Choose language">
-          <button type="button" @click="setLanguage('en')" :class="language === 'en' && 'language-switcher__option--active'" :aria-pressed="language === 'en'" aria-label="Use English"><span aria-hidden="true">🇬🇧</span><span>EN</span></button>
-          <button type="button" @click="setLanguage('th')" :class="language === 'th' && 'language-switcher__option--active'" :aria-pressed="language === 'th'" aria-label="ใช้ภาษาไทย"><span aria-hidden="true">🇹🇭</span><span>ไทย</span></button>
+          <button type="button" @click="setLanguage('en')" :class="language === 'en' && 'language-switcher__option--active'" :aria-pressed="language === 'en'" aria-label="Use English">EN</button>
+          <button type="button" @click="setLanguage('th')" :class="language === 'th' && 'language-switcher__option--active'" :aria-pressed="language === 'th'" aria-label="ใช้ภาษาไทย">ไทย</button>
         </div>
         <div class="assistant-topbar__status"><span class="status-dot"></span><span x-text="copy.status">AI-assisted · technician reviewed</span></div>
       </div>
