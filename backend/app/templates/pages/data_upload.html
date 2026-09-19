@@ -10,19 +10,10 @@
       <div class="page-status"><span class="status-dot"></span>Secure upload</div>
     </header>
 
-    <section class="import-canvas" aria-labelledby="import-title">
+    <section class="import-canvas" aria-labelledby="required-product-data-title">
       <div class="page-aura page-aura--right" aria-hidden="true"></div>
-      <div class="import-heading">
-        <div><div class="section-label"><span class="section-label__icon">↑</span> Build your knowledge base</div><h2 id="import-title">Bring your product knowledge<br><em>into one trusted place.</em></h2><p>Pair each product with an image and its manual. We’ll prepare the content so Service Assistant can find grounded, relevant answers.</p></div>
-        <ol class="refined-pipeline" aria-label="Required product data">
-          <li class="refined-pipeline__active"><span>01</span><div><strong>Name</strong><small>Identify product</small></div></li>
-          <li><span>02</span><div><strong>Image</strong><small>Show product</small></div></li>
-          <li><span>03</span><div><strong>Manual</strong><small>Add knowledge</small></div></li>
-        </ol>
-      </div>
-
       <form class="import-form" hx-post="/data/upload" hx-target="#upload-result" hx-encoding="multipart/form-data" hx-indicator="#uploading">
-        <div class="import-form__head"><div><p class="kicker">Required product data</p><h3>Complete all three details</h3></div><span class="privacy-note">⌾ Files stay in your workspace</span></div>
+        <div class="import-form__head"><div><p class="kicker" id="required-product-data-title">Required product data</p><h3>Complete all three details</h3></div><span class="privacy-note">⌾ Files stay in your workspace</span></div>
         <ol class="import-fields">
           <li class="import-field import-field--name"><span class="import-field__number">01</span><div class="import-field__body"><label for="product-name">Product name</label><p>The name your team will use to identify this product.</p><div class="text-field"><span aria-hidden="true">⌁</span><input id="product-name" name="product_name" type="text" required maxlength="200" placeholder="e.g. Hydraulic Pump HP-500" autocomplete="off"></div></div></li>
           <li class="import-field"><span class="import-field__number">02</span><div class="import-field__body"><label for="product-image">Product image</label><p>JPG, PNG, or WEBP · Up to {{ max_upload_size_mb }} MB</p><label class="refined-dropzone" for="product-image"><span class="refined-dropzone__icon" aria-hidden="true">▧</span><span><strong>Drop an image here</strong><small>or choose a clear product photo</small></span><b>Choose image</b><input id="product-image" required type="file" name="product_image" accept="image/jpeg,image/png,image/webp"></label></div></li>

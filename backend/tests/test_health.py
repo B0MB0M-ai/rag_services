@@ -24,11 +24,12 @@ def test_health_check_returns_envelope() -> None:
     }
 
 
-def test_home_page_is_served_by_fastapi() -> None:
+def test_root_serves_import_data_page_through_redirect() -> None:
     response = TestClient(app).get("/")
 
     assert response.status_code == 200
-    assert "Start with data" in response.text
+    assert "Import Data for RAG" in response.text
+    assert "Required product data" in response.text
     assert "htmx.org" in response.text
     assert "alpinejs" in response.text
 

@@ -4,7 +4,7 @@ from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import HTMLResponse, Response
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
 from app.core.config import get_settings
@@ -54,14 +54,10 @@ async def document_content(document_id: str) -> Response:
     )
 
 
-@web_router.get("/", response_class=HTMLResponse)
-async def home(request: Request) -> HTMLResponse:
-    """Render the application landing page."""
-    return templates.TemplateResponse(
-        request=request,
-        name="pages/home.html",
-        context={"active": "dashboard", "document_count": len(KNOWLEDGE_DOCUMENTS)},
-    )
+@web_router.get("/", response_class=RedirectResponse)
+async def home() -> RedirectResponse:
+    """Open the product knowledge import workspace by default."""
+    return RedirectResponse(url="/data", status_code=307)
 
 
 @web_router.get("/assistant", response_class=HTMLResponse)

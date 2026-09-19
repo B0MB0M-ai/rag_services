@@ -133,6 +133,10 @@ def test_data_upload_page_and_document_api() -> None:
     page = client.get("/data")
     assert page.status_code == 200
     assert "Import Data for RAG" in page.text
+    assert "Required product data" in page.text
+    assert "Build your knowledge base" not in page.text
+    assert "Bring your product knowledge" not in page.text
+    assert "Pair each product with an image and its manual" not in page.text
     assert "Product name" in page.text
     assert "Product image" in page.text
     assert "PDF, DOCX, or TXT" in page.text
@@ -152,11 +156,11 @@ def test_data_upload_page_and_document_api() -> None:
 
 
 def test_navigation_contains_only_requested_destinations() -> None:
-    page = client.get("/")
+    page = client.get("/data")
 
     assert page.status_code == 200
-    assert page.text.count('class="nav-item ') == 4
-    assert "Overview" in page.text
+    assert page.text.count('class="nav-item ') == 3
+    assert "Overview" not in page.text
     assert "Service Assistant" in page.text
     assert "Import Data" in page.text
     assert "Case Information" in page.text
@@ -165,6 +169,13 @@ def test_navigation_contains_only_requested_destinations() -> None:
     assert ">Knowledge &amp; API<" not in page.text
     assert ">Parts &amp; Pricing<" not in page.text
     assert "navigationCollapsed" in page.text
+
+
+def test_root_opens_import_data_page() -> None:
+    response = client.get("/", follow_redirects=False)
+
+    assert response.status_code == 307
+    assert response.headers["location"] == "/data"
 
 
 def test_case_information_page_marks_navigation_item_active() -> None:

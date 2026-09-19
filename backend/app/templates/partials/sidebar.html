@@ -1,6 +1,6 @@
 <aside class="sidebar" :class="navigationOpen && 'sidebar--open'" aria-label="Primary navigation">
   <div class="sidebar__header">
-    <a class="brand" href="/" aria-label="ServiceIQ overview">
+    <a class="brand" href="/data" aria-label="ServiceIQ import data">
       <span class="brand__mark">S</span>
       <span class="brand__copy"><strong>SERVICE<span>IQ</span></strong><small>Maintenance Intelligence</small></span>
     </a>
@@ -17,7 +17,6 @@
 
   <nav aria-label="Main menu">
     <small>WORKSPACE</small>
-    <a class="nav-item {{ 'nav-item--active' if active == 'dashboard' }}" href="/" title="Overview"><span class="nav-item__icon" aria-hidden="true">▦</span><span class="nav-item__label">Overview</span></a>
     <a class="nav-item {{ 'nav-item--active' if active == 'assistant' }}" href="/assistant" title="Service Assistant"><span class="nav-item__icon" aria-hidden="true">✦</span><span class="nav-item__label">Service Assistant</span></a>
 
     <small>KNOWLEDGE</small>
