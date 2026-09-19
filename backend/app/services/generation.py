@@ -7,6 +7,8 @@ from collections.abc import AsyncIterator
 from functools import lru_cache
 from typing import TYPE_CHECKING, Protocol
 
+from pydantic import ValidationError
+
 if TYPE_CHECKING:
     from openai import AsyncOpenAI
 
@@ -128,6 +130,11 @@ class OpenAIDiagnosisGenerator:
         except self._api_error as error:
             logger.exception("OpenAI diagnosis generation failed")
             raise GenerationError("AI diagnosis generation is temporarily unavailable") from error
+        except ValidationError as error:
+            logger.exception("OpenAI diagnosis generation returned invalid structured output")
+            raise GenerationError(
+                "AI diagnosis generation returned an incomplete or invalid response"
+            ) from error
         if response.output_parsed is None:
             raise GenerationError("AI diagnosis generation returned no structured result")
         return response.output_parsed
@@ -159,6 +166,11 @@ class OpenAIDiagnosisGenerator:
                 logger.exception("OpenAI diagnosis streaming failed")
                 raise GenerationError(
                     "AI diagnosis generation is temporarily unavailable"
+                ) from error
+            except ValidationError as error:
+                logger.exception("OpenAI diagnosis streaming returned invalid structured output")
+                raise GenerationError(
+                    "AI diagnosis generation returned an incomplete or invalid response"
                 ) from error
             if parsed is None:
                 raise GenerationError("AI diagnosis generation returned no structured result")

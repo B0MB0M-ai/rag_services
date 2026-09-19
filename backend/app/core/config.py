@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     mock_ai: bool = False
     openai_api_key: SecretStr | None = None
     openai_response_model: str = "gpt-5-mini"
-    openai_max_output_tokens: int = 800
+    openai_max_output_tokens: int = 4000
     cors_origins: str = "http://localhost:8000"
     rag_min_evidence_score: float = 0.35
     rag_chunk_size: int = 800

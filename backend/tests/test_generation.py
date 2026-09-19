@@ -1,8 +1,10 @@
 import asyncio
+from contextlib import asynccontextmanager
 from types import SimpleNamespace
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
+from pydantic import ValidationError
 
 from app.core.config import Settings
 from app.schemas.domain import ChatRequest, DocumentChunk, GeneratedDiagnosis, KnowledgeDocument
@@ -70,7 +72,7 @@ def test_openai_generator_sends_retrieved_evidence_for_structured_generation() -
     request = parse.await_args.kwargs
     assert request["model"] == "gpt-5-mini"
     assert request["text_format"] is GeneratedDiagnosis
-    assert request["max_output_tokens"] == 800
+    assert request["max_output_tokens"] == 4000
     assert request["text"] == {"verbosity": "low"}
     assert "pump.pdf" in request["input"]
     assert "Inspect the suction filter" in request["input"]
@@ -85,6 +87,43 @@ def test_openai_generator_sends_retrieved_evidence_for_structured_generation() -
 def test_openai_generator_requires_server_side_api_key() -> None:
     with pytest.raises(GenerationError, match="OPENAI_API_KEY"):
         OpenAIDiagnosisGenerator(Settings(mock_ai=False, openai_api_key=None))
+
+
+def test_openai_generator_converts_truncated_structured_output_to_generation_error() -> None:
+    validation_error = _truncated_output_error()
+    parse = AsyncMock(side_effect=validation_error)
+    client = SimpleNamespace(responses=SimpleNamespace(parse=parse))
+    generator = OpenAIDiagnosisGenerator(
+        Settings(mock_ai=False, openai_api_key="test-key"), client=client
+    )
+
+    with pytest.raises(GenerationError, match="incomplete or invalid response"):
+        asyncio.run(generator.generate(ChatRequest(message="ปั๊มหยุดทำงาน"), [_evidence()]))
+
+
+def test_openai_stream_converts_truncated_structured_output_to_generation_error() -> None:
+    @asynccontextmanager
+    async def truncated_stream():
+        async def events():
+            raise _truncated_output_error()
+            yield
+
+        yield events()
+
+    stream = Mock(return_value=truncated_stream())
+    client = SimpleNamespace(responses=SimpleNamespace(stream=stream))
+    generator = OpenAIDiagnosisGenerator(
+        Settings(mock_ai=False, openai_api_key="test-key"), client=client
+    )
+
+    async def consume_stream() -> None:
+        async for _event in generator.stream(
+            ChatRequest(message="ปั๊มหยุดทำงาน"), [_evidence()]
+        ):
+            pass
+
+    with pytest.raises(GenerationError, match="incomplete or invalid response"):
+        asyncio.run(consume_stream())
 
 
 def test_mock_generator_never_presents_raw_evidence_as_ai_diagnosis() -> None:
@@ -109,3 +148,9 @@ def test_structured_answer_decoder_handles_split_json_and_escapes() -> None:
     assert decoder.feed('wer":"ตรวจ\\n') == "ตรวจ\n"
     assert decoder.feed("สอบ") == "สอบ"
     assert decoder.feed('","confidence":"sufficient"}') == ""
+
+
+def _truncated_output_error() -> ValidationError:
+    with pytest.raises(ValidationError) as caught:
+        GeneratedDiagnosis.model_validate_json('{"answer":"truncated')
+    return caught.value
