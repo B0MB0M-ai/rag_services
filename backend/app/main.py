@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.router import api_router
 from app.core.config import get_settings
+from app.repositories.catalog import load_persistent_state
 from app.web.router import web_router
 
 APP_DIRECTORY = Path(__file__).parent
@@ -14,6 +15,7 @@ APP_DIRECTORY = Path(__file__).parent
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
     settings = get_settings()
+    load_persistent_state()
     application = FastAPI(
         title="AI Service & Repair Assistant API",
         description="Portfolio demo API for evidence-based machinery service assistance.",

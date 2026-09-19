@@ -1,6 +1,10 @@
+from datetime import UTC, datetime
+from uuid import uuid4
+
 from fastapi import APIRouter, HTTPException
 
-from app.schemas.domain import ChatRequest, EstimateRequest
+from app.repositories.catalog import SERVICE_CASES, persist_service_cases
+from app.schemas.domain import ChatRequest, EstimateRequest, ServiceCase
 from app.services.diagnosis import diagnose
 from app.services.generation import GenerationError
 from app.services.pricing import calculate_estimate
@@ -14,6 +18,18 @@ async def chat(request: ChatRequest) -> dict[str, object]:
         result = await diagnose(request)
     except GenerationError as error:
         raise HTTPException(status_code=503, detail=str(error)) from error
+    SERVICE_CASES.insert(
+        0,
+        ServiceCase(
+            id=str(uuid4()),
+            question=request.message,
+            answer=result.answer,
+            confidence=result.confidence,
+            citations=result.citations,
+            created_at=datetime.now(UTC),
+        ),
+    )
+    persist_service_cases()
     return {"success": True, "data": result}
 
 
