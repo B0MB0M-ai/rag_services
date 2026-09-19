@@ -102,6 +102,15 @@ class ChatResult(BaseModel):
     warning: str
 
 
+class ServiceCase(BaseModel):
+    id: str
+    question: str
+    answer: str
+    confidence: Literal["sufficient", "insufficient"]
+    citations: list[Citation]
+    created_at: datetime
+
+
 class GeneratedDiagnosis(BaseModel):
     """Model-generated technical guidance before trusted citations are attached."""
 

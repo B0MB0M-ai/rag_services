@@ -6,8 +6,8 @@ An internal portfolio-demo application for industrial machinery service officers
 
 > **Phase status:** Integrated portfolio demo. The application includes a polished dashboard,
 > service-assistant workflow, cited GPT generation with a deterministic offline mode, catalog APIs, and exact
-> server-side estimate calculation. PostgreSQL persistence, production authentication, document
-> durable PostgreSQL persistence, production authentication, and PDF rendering remain deployment
+> server-side estimate calculation. Durable local RAG uploads and service-conversation history are
+> included; production PostgreSQL persistence, authentication, and PDF rendering remain deployment
 > extensions described below.
 
 ## Business problem and guardrails
@@ -105,14 +105,17 @@ Set `MOCK_AI=true` only for offline development and automated tests. Offline mod
 not display retrieved excerpts as if they were an AI diagnosis; it returns an insufficient-result
 configuration notice so operators cannot mistake raw or corrupted PDF text for repair guidance.
 Other important values include `DATABASE_URL`, model names, CORS origins, upload limits, and
-retrieval tuning values.
+retrieval tuning values. `APP_DATA_DIR` controls the durable local data directory and defaults to
+`backend/data`; imported files, document metadata, RAG chunks, and Service Assistant cases survive
+application restarts there. Back up this directory before moving or replacing the project.
 
 ## Data, seeding, and indexing
 
 A new workspace starts empty: it does not preload machines, parts, service cases, prices, or
-knowledge documents. Customer data must be explicitly imported after the corresponding persistence
-and ingestion workflows are configured. Automated tests create their own isolated fixtures; no
-proprietary manual is included.
+knowledge documents. Customer data must be explicitly imported. Product images, manuals, extracted
+RAG chunks, and completed Service Assistant question/answer pairs are then stored under
+`APP_DATA_DIR`; Case Information displays the saved conversation list. Automated tests create their
+own isolated storage directories; no proprietary manual is included.
 
 ## Testing and checks
 
@@ -134,10 +137,9 @@ _Placeholder: dashboard, three-column Service Assistant, and preliminary quotati
 
 ## Current limitations
 
-- Catalog, uploaded-document records, extracted chunks, and deterministic embeddings currently use
-  an in-process repository; the complete local RAG flow works immediately but resets on restart.
-  Production deployments should replace this with the planned SQLAlchemy and object-storage
-  repositories.
+- Machines, parts, and pricing still use an in-process catalog. Uploaded knowledge, extracted chunks,
+  deterministic embeddings, and Service Assistant cases use the durable local repository. Production
+  deployments should replace it with the planned SQLAlchemy and object-storage repositories.
 - Authentication, OpenAI embedding mode, OCR, and downloadable PDF rendering are not enabled in
   this portfolio build. GPT response generation is the default and requires `OPENAI_API_KEY`;
   local retrieval remains deterministic. Use `MOCK_AI=true` only when raw deterministic evidence

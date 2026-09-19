@@ -3,8 +3,36 @@
 {% block content %}
 <main class="app-shell" x-data="{ navigationOpen: false, navigationCollapsed: false }" :class="navigationCollapsed && 'app-shell--navigation-collapsed'">
   {% include "partials/sidebar.html" %}
-  <section class="workspace">
+  <section class="workspace case-information-page">
     <header class="topbar"><button class="menu-button" type="button" @click="navigationOpen=true; navigationCollapsed=false" aria-label="Open navigation">☰</button><div><p class="kicker">Knowledge records</p><h1>Case Information</h1></div><span class="user-chip">SO</span></header>
+    {% if service_cases %}
+    <section class="case-history" aria-labelledby="case-history-title">
+      <div class="case-history__heading">
+        <div><p class="kicker">Service Assistant history</p><h2 id="case-history-title">Questions and answers</h2></div>
+        <span>{{ service_cases|length }} conversation{{ '' if service_cases|length == 1 else 's' }}</span>
+      </div>
+      <ol class="case-history__list">
+        {% for item in service_cases %}
+        <li>
+          <article class="case-history__card">
+            <header>
+              <span class="case-history__number">{{ "%02d"|format(loop.index) }}</span>
+              <div><strong>Service conversation</strong><time datetime="{{ item.case.created_at.isoformat() }}">{{ item.created_at }} (UTC+07:00)</time></div>
+              <span class="badge {{ 'green' if item.case.confidence == 'sufficient' else 'amber' }}">{{ item.case.confidence }}</span>
+            </header>
+            <div class="case-history__exchange">
+              <section><p class="kicker">User question</p><h3>{{ item.case.question }}</h3></section>
+              <section><p class="kicker">System answer</p><p class="case-history__answer">{{ item.case.answer }}</p></section>
+            </div>
+            {% if item.case.citations %}
+            <footer><strong>Sources</strong>{% for citation in item.case.citations %}<span>{{ citation.document }} · {{ citation.section }}</span>{% endfor %}</footer>
+            {% endif %}
+          </article>
+        </li>
+        {% endfor %}
+      </ol>
+    </section>
+    {% else %}
     <section class="panel empty-state case-information-empty">
       <div class="empty-state__icon" aria-hidden="true">▱</div>
       <p class="kicker">No service cases</p>
@@ -12,6 +40,7 @@
       <p>There are no imported service cases yet. Once case ingestion is available, this page will provide a single place to review the information used by the Service Assistant.</p>
       <a class="primary" href="/data">Import product data <span>→</span></a>
     </section>
+    {% endif %}
   </section>
   <button class="scrim" x-show="navigationOpen" x-cloak @click="navigationOpen=false" aria-label="Close navigation"></button>
 </main>

@@ -4,7 +4,7 @@ from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
 
 from app.core.config import get_settings
 from app.rag.indexing import index_document
-from app.repositories.catalog import DOCUMENT_CONTENT, KNOWLEDGE_DOCUMENTS
+from app.repositories.catalog import DOCUMENT_CONTENT, KNOWLEDGE_DOCUMENTS, persist_documents
 from app.schemas.domain import KnowledgeDocument
 from app.services.documents import DocumentCategory, DocumentUploadError, store_document
 
@@ -42,4 +42,5 @@ async def reindex_document(document_id: str) -> dict[str, KnowledgeDocument]:
     if document is None or content is None:
         raise HTTPException(status_code=404, detail="Document not found")
     index_document(document, content)
+    persist_documents()
     return {"data": document}

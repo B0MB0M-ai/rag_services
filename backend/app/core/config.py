@@ -1,4 +1,5 @@
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -21,6 +22,7 @@ class Settings(BaseSettings):
     rag_keyword_results: int = 12
     rag_final_context_count: int = 6
     max_upload_size_mb: int = 20
+    app_data_dir: Path = Path(__file__).resolve().parents[2] / "data"
 
     model_config = SettingsConfigDict(env_file="../.env", extra="ignore")
 

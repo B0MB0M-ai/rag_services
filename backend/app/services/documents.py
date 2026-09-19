@@ -6,7 +6,12 @@ from uuid import uuid4
 from fastapi import UploadFile
 
 from app.rag.indexing import index_document
-from app.repositories.catalog import DOCUMENT_CHUNKS, DOCUMENT_CONTENT, KNOWLEDGE_DOCUMENTS
+from app.repositories.catalog import (
+    DOCUMENT_CHUNKS,
+    DOCUMENT_CONTENT,
+    KNOWLEDGE_DOCUMENTS,
+    persist_documents,
+)
 from app.schemas.domain import KnowledgeDocument
 
 DocumentCategory = Literal["machine", "product_image", "manual"]
@@ -71,6 +76,7 @@ async def store_document(
     KNOWLEDGE_DOCUMENTS.insert(0, document)
     DOCUMENT_CONTENT[document.id] = content
     index_document(document, content)
+    persist_documents()
     return document
 
 
@@ -79,3 +85,4 @@ def remove_document(document_id: str) -> None:
     KNOWLEDGE_DOCUMENTS[:] = [item for item in KNOWLEDGE_DOCUMENTS if item.id != document_id]
     DOCUMENT_CONTENT.pop(document_id, None)
     DOCUMENT_CHUNKS.pop(document_id, None)
+    persist_documents()

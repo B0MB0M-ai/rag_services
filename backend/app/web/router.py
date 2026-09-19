@@ -1,13 +1,14 @@
 from pathlib import Path
 from typing import Annotated, TypedDict
 from urllib.parse import quote
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, Response
 from fastapi.templating import Jinja2Templates
 
 from app.core.config import get_settings
-from app.repositories.catalog import DOCUMENT_CONTENT, KNOWLEDGE_DOCUMENTS
+from app.repositories.catalog import DOCUMENT_CONTENT, KNOWLEDGE_DOCUMENTS, SERVICE_CASES
 from app.schemas.domain import KnowledgeDocument
 from app.services.documents import DocumentUploadError, remove_document, store_document
 
@@ -88,7 +89,20 @@ async def data_upload(request: Request) -> HTMLResponse:
 async def case_information(request: Request) -> HTMLResponse:
     """Render the service case information workspace."""
     return templates.TemplateResponse(
-        request=request, name="pages/cases.html", context={"active": "cases"}
+        request=request,
+        name="pages/cases.html",
+        context={
+            "active": "cases",
+            "service_cases": [
+                {
+                    "case": service_case,
+                    "created_at": service_case.created_at.astimezone(
+                        ZoneInfo("Asia/Bangkok")
+                    ).strftime("%d/%m/%Y/ %H:%M:%S"),
+                }
+                for service_case in SERVICE_CASES
+            ],
+        },
     )
 
 
