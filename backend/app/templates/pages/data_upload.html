@@ -32,7 +32,7 @@
       </form>
       <div id="uploading" class="htmx-indicator upload-message">Uploading, please wait…</div><div id="upload-result" aria-live="polite"></div>
 
-      <section class="recent-imports"><div class="recent-imports__head"><div><p class="kicker">Recent uploads</p><h3>Your product knowledge</h3></div><span>{{ documents|length }} {{ 'file' if documents|length == 1 else 'files' }}</span></div>{% if documents %}{% for item in documents %}<div class="file-row"><span class="file-row__icon">{{ '▧' if item.category == 'product_image' else '▱' }}</span><div><strong>{{ item.filename }}</strong><small>{% if item.product_name %}{{ item.product_name }} · {% endif %}{{ 'Product image' if item.category == 'product_image' else ('Manual' if item.category == 'manual' else 'Existing data') }} · {{ (item.size_bytes / 1024)|round(1) }} KB</small></div><span class="badge {{ 'green' if item.status == 'indexed' else 'amber' }}">{{ item.status|replace('_', ' ')|title }}{% if item.chunk_count %} · {{ item.chunk_count }} chunks{% endif %}</span></div>{% endfor %}{% else %}<div class="recent-imports__empty"><span aria-hidden="true">◇</span><div><strong>No product knowledge yet</strong><small>Your uploaded files will appear here, ready for Service Assistant.</small></div></div>{% endif %}</section>
+      {% include "partials/product_knowledge.html" %}
     </section>
   </section>
   <button class="scrim" x-show="navigationOpen" x-cloak @click="navigationOpen=false" aria-label="Close menu"></button>

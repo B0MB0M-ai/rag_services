@@ -234,3 +234,45 @@ def test_document_upload_rejects_wrong_type_and_empty_files() -> None:
     )
     assert empty.status_code == 422
     assert "file is empty" in empty.json()["detail"]
+
+
+def test_product_knowledge_table_refresh_and_file_links() -> None:
+    from app.repositories.catalog import DOCUMENT_CONTENT, KNOWLEDGE_DOCUMENTS
+
+    KNOWLEDGE_DOCUMENTS.clear()
+    DOCUMENT_CONTENT.clear()
+    for _ in range(2):
+        response = client.post(
+            "/data/upload",
+            data={"product_name": "Pump <500>"},
+            files={
+                "product_image": ("pump.png", b"image content", "image/png"),
+                "manual": ("pump.pdf", b"pdf content", "application/pdf"),
+            },
+        )
+        assert response.status_code == 200
+        assert 'hx-swap-oob="outerHTML"' in response.text
+        assert 'id="product-knowledge"' in response.text
+
+    page = client.get("/data")
+    assert '<th scope="col">Product name</th>' in page.text
+    assert '<th scope="col">Product image</th>' in page.text
+    assert '<th scope="col">Product manual</th>' in page.text
+    assert page.text.count('<th scope="row">Pump &lt;500&gt;</th>') == 1
+    assert "hx-swap-oob" not in page.text
+    for document in KNOWLEDGE_DOCUMENTS:
+        url = f"/data/documents/{document.id}"
+        assert url in page.text
+        content = client.get(url)
+        assert content.status_code == 200
+        assert content.content == DOCUMENT_CONTENT[document.id]
+        assert content.headers["content-type"] == document.content_type
+        assert content.headers["content-disposition"].startswith("inline;")
+        assert content.headers["x-content-type-options"] == "nosniff"
+        if document.category == "product_image":
+            assert f'src="{url}"' in page.text
+        else:
+            assert f'href="{url}" target="_blank"' in page.text
+    assert client.get("/data/documents/missing").status_code == 404
+    DOCUMENT_CONTENT.pop(KNOWLEDGE_DOCUMENTS[0].id)
+    assert client.get(f"/data/documents/{KNOWLEDGE_DOCUMENTS[0].id}").status_code == 404

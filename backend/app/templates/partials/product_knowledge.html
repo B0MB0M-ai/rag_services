@@ -1,0 +1,24 @@
+<section id="product-knowledge" class="recent-imports" aria-labelledby="product-knowledge-title"{% if refresh_products %} hx-swap-oob="outerHTML"{% endif %}>
+  <div class="recent-imports__head">
+    <div><p class="kicker">Recent uploads</p><h3 id="product-knowledge-title">Your product knowledge</h3></div>
+    <span>{{ products|length }} {{ 'product' if products|length == 1 else 'products' }}</span>
+  </div>
+  {% if products %}
+  <div class="product-knowledge-scroll" role="region" aria-label="Product knowledge table" tabindex="0">
+    <table class="product-knowledge-table">
+      <thead><tr><th scope="col">Product name</th><th scope="col">Product image</th><th scope="col">Product manual</th></tr></thead>
+      <tbody>
+        {% for product in products %}
+        <tr>
+          <th scope="row">{{ product.name }}</th>
+          <td>{% for image in product.images %}<img class="product-knowledge-image" src="/data/documents/{{ image.id }}" alt="{{ product.name }}" width="112" height="112" loading="lazy">{% else %}<span class="product-knowledge-missing">No image</span>{% endfor %}</td>
+          <td>{% for manual in product.manuals %}<a class="product-knowledge-manual" href="/data/documents/{{ manual.id }}" target="_blank" rel="noopener noreferrer">{{ manual.filename }} <span>(opens in a new tab)</span></a>{% else %}<span class="product-knowledge-missing">No manual</span>{% endfor %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="recent-imports__empty"><span aria-hidden="true">◇</span><div><strong>No product knowledge yet</strong><small>Your uploaded products will appear here, ready for Service Assistant.</small></div></div>
+  {% endif %}
+</section>

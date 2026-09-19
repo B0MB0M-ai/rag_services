@@ -24,3 +24,5 @@
 .assistant-response__answer {
   white-space: pre-line;
 }
+
+.product-knowledge-scroll{overflow-x:auto;border-radius:0 0 18px 18px}.product-knowledge-table{width:100%;min-width:480px;border-collapse:collapse;text-align:left;table-layout:fixed}.product-knowledge-table th,.product-knowledge-table td{padding:16px 24px;border-bottom:1px solid #edf0ee;vertical-align:middle;overflow-wrap:anywhere}.product-knowledge-table thead th{background:#f8fbfa;color:#586966;font-size:11px}.product-knowledge-table tbody th{color:#243c39;font-size:12px;font-weight:600}.product-knowledge-table tr:last-child>*{border-bottom:0}.product-knowledge-image{display:inline-block;width:112px;height:112px;max-width:100%;object-fit:contain;border:1px solid #e2e8e5;border-radius:10px;background:#fafcfb;margin:4px}.product-knowledge-manual{display:block;margin:6px 0;color:#087c74;font-size:11px;text-decoration:underline}.product-knowledge-manual span{display:block;margin-top:4px;color:#586966;font-size:9px}.product-knowledge-missing{color:#586966;font-size:11px}

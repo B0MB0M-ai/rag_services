@@ -1,16 +1,56 @@
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, TypedDict
+from urllib.parse import quote
 
-from fastapi import APIRouter, File, Form, Request, UploadFile
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
+from fastapi.responses import HTMLResponse, Response
 from fastapi.templating import Jinja2Templates
 
 from app.core.config import get_settings
-from app.repositories.catalog import KNOWLEDGE_DOCUMENTS
+from app.repositories.catalog import DOCUMENT_CONTENT, KNOWLEDGE_DOCUMENTS
+from app.schemas.domain import KnowledgeDocument
 from app.services.documents import DocumentUploadError, remove_document, store_document
 
 web_router = APIRouter(include_in_schema=False)
 templates = Jinja2Templates(directory=Path(__file__).parent.parent / "templates")
+
+
+class ProductKnowledge(TypedDict):
+    name: str
+    images: list[KnowledgeDocument]
+    manuals: list[KnowledgeDocument]
+
+
+def product_knowledge() -> list[ProductKnowledge]:
+    products: dict[str, ProductKnowledge] = {}
+    for document in KNOWLEDGE_DOCUMENTS:
+        if document.category not in {"product_image", "manual"}:
+            continue
+        key = document.product_name or document.id
+        product = products.setdefault(
+            key, {"name": document.product_name or document.filename, "images": [], "manuals": []}
+        )
+        documents: list[KnowledgeDocument] = product[
+            "images" if document.category == "product_image" else "manuals"
+        ]
+        documents.append(document)
+    return list(products.values())
+
+
+@web_router.get("/data/documents/{document_id}")
+async def document_content(document_id: str) -> Response:
+    document = next((item for item in KNOWLEDGE_DOCUMENTS if item.id == document_id), None)
+    content = DOCUMENT_CONTENT.get(document_id)
+    if document is None or content is None:
+        raise HTTPException(status_code=404, detail="Document not found")
+    return Response(
+        content=content,
+        media_type=document.content_type,
+        headers={
+            "Content-Disposition": f"inline; filename*=UTF-8''{quote(document.filename, safe='')}",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
 
 
 @web_router.get("/", response_class=HTMLResponse)
@@ -38,7 +78,7 @@ async def data_upload(request: Request) -> HTMLResponse:
         name="pages/data_upload.html",
         context={
             "active": "data",
-            "documents": KNOWLEDGE_DOCUMENTS,
+            "products": product_knowledge(),
             "max_upload_size_mb": settings.max_upload_size_mb,
         },
     )
@@ -91,7 +131,8 @@ async def data_upload_submit(
             raise DocumentUploadError(failed.indexing_error or "Document indexing failed")
         context = {
             "product_name": normalized_name,
-            "documents": [image_document, manual_document],
+            "products": product_knowledge(),
+            "refresh_products": True,
             "error": None,
         }
     except DocumentUploadError as error:
