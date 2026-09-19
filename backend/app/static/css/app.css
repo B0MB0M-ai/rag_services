@@ -26,3 +26,17 @@
 }
 
 .product-knowledge-scroll{overflow-x:auto;border-radius:0 0 18px 18px}.product-knowledge-table{width:100%;min-width:480px;border-collapse:collapse;text-align:left;table-layout:fixed}.product-knowledge-table th,.product-knowledge-table td{padding:16px 24px;border-bottom:1px solid #edf0ee;vertical-align:middle;overflow-wrap:anywhere}.product-knowledge-table thead th{background:#f8fbfa;color:#586966;font-size:11px}.product-knowledge-table tbody th{color:#243c39;font-size:12px;font-weight:600}.product-knowledge-table tr:last-child>*{border-bottom:0}.product-knowledge-image{display:inline-block;width:112px;height:112px;max-width:100%;object-fit:contain;border:1px solid #e2e8e5;border-radius:10px;background:#fafcfb;margin:4px}.product-knowledge-manual{display:block;margin:6px 0;color:#087c74;font-size:11px;text-decoration:underline}.product-knowledge-manual span{display:block;margin-top:4px;color:#586966;font-size:9px}.product-knowledge-missing{color:#586966;font-size:11px}
+
+/* Conversation replaces the welcome content as soon as a question is sent. */
+.assistant-welcome--chat .assistant-welcome__content{display:flex;flex-direction:column;height:calc(100dvh - 140px);min-height:360px;padding:20px 0;gap:20px}
+.assistant-chat{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:4px;display:flex;flex-direction:column;gap:18px;text-align:left}
+.assistant-chat__message{flex-shrink:0;width:fit-content;max-width:85%;padding:16px 20px;border:1px solid #dce8e5;border-radius:18px;background:#fff;overflow-wrap:anywhere}
+.assistant-chat__message--user{align-self:flex-end;background:#dcf6ef;border-color:#b4e3d7;border-bottom-right-radius:4px}
+.assistant-chat__message--system{align-self:flex-start;border-bottom-left-radius:4px}
+.assistant-chat__meta{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;color:#486760;font-size:11px}
+.assistant-chat__meta time{font-size:10px;font-variant-numeric:tabular-nums}
+.assistant-chat__message p{margin:10px 0 0;font-size:14px;line-height:1.7;white-space:pre-wrap}
+.assistant-chat__message small{display:block;margin-top:10px;color:#16877c}
+.assistant-chat__pending{color:#486760;font-size:13px}
+.assistant-welcome--chat .assistant-composer{flex-shrink:0;width:100%;max-width:none}
+@media(max-width:720px){.assistant-chat__message{max-width:95%;padding:12px 14px}.assistant-welcome--chat .assistant-welcome__content{height:calc(100dvh - 120px)}}
